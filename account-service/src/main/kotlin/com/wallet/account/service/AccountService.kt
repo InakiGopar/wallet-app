@@ -3,6 +3,8 @@ package com.wallet.account.service
 import com.wallet.account.domian.models.Account
 import com.wallet.account.domian.models.AccountStatus
 import com.wallet.account.domian.models.Balance
+import com.wallet.account.infrastructure.messaging.events.BalanceUpdatedEvent
+import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
 import com.wallet.account.repository.AccountRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -12,7 +14,8 @@ import java.util.UUID
 
 @Service
 class AccountService(
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
+    private val eventPublisher: EventPublisher
 ) {
     @Transactional
     fun createAccount(currency: String): Account {
@@ -54,6 +57,18 @@ class AccountService(
         }
 
         accountRepository.updateBalance(accountId, newAmount)
+
+        val event = BalanceUpdatedEvent(
+            accountId = accountId,
+            newBalance = newAmount,
+            occurredAt = Instant.now()
+        )
+
+        eventPublisher.publish(
+            "balance.update",
+            event
+        )
+
     }
 
 

@@ -8,5 +8,6 @@ data class TransactionCreatedEvent(
     val transactionId: UUID,
     val accountId: UUID,
     val amount: BigDecimal,
-    val createdAt: Instant
-)
+    val createdAt: Instant,
+    override val occurredAt: Instant
+) : DomainEvent

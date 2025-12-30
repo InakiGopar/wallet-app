@@ -7,5 +7,5 @@ import java.util.UUID
 data class BalanceUpdatedEvent(
     val accountId: UUID,
     val newBalance: BigDecimal,
-    val occurredAt: Instant
-)
+    override val occurredAt: Instant
+) : DomainEvent
