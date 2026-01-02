@@ -8,7 +8,7 @@ import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.infrastructure.messaging.events.BalanceUpdatedEvent
 import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
-import com.wallet.account.repository.AccountRepository
+import com.wallet.account.domian.repository.AccountRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal

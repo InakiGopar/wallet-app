@@ -10,7 +10,7 @@ import com.wallet.account.infrastructure.persistence.jooq.extensions.toInstantUt
 import com.wallet.account.infrastructure.persistence.jooq.extensions.toLocalDateTimeUtc
 import com.wallet.account.jooq.tables.references.ACCOUNTS
 import com.wallet.account.jooq.tables.references.BALANCES
-import com.wallet.account.repository.AccountRepository
+import com.wallet.account.domian.repository.AccountRepository
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
