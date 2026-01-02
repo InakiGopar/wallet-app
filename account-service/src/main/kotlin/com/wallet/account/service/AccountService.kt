@@ -1,8 +1,11 @@
 package com.wallet.account.service
 
 import com.wallet.account.domian.models.Account
-import com.wallet.account.domian.models.AccountStatus
+import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.Balance
+import com.wallet.account.domian.models.microTypes.AccountId
+import com.wallet.account.domian.models.microTypes.Currency
+import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.infrastructure.messaging.events.BalanceUpdatedEvent
 import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
 import com.wallet.account.repository.AccountRepository
@@ -18,8 +21,9 @@ class AccountService(
     private val eventPublisher: EventPublisher
 ) {
     @Transactional
-    fun createAccount(currency: String): Account {
-        val accountId = UUID.randomUUID()
+    fun createAccount(currency: Currency): Account {
+
+        val accountId = AccountId(UUID.randomUUID())
         val now = Instant.now()
 
         val account = Account(
@@ -29,7 +33,10 @@ class AccountService(
             createdAt = now,
             balance = Balance(
                 accountId = accountId,
-                amount = BigDecimal.ZERO,
+                money = Money(
+                    amount = BigDecimal.ZERO,
+                    currency = currency
+                ),
                 updatedAt = now
             )
         )
@@ -38,20 +45,18 @@ class AccountService(
     }
 
 
-    fun getAccount(accountId: UUID): Account {
+    fun getAccount(accountId: AccountId): Account {
         return accountRepository.findById(accountId)
             ?: throw IllegalArgumentException("Account with id $accountId not found")
     }
 
 
     @Transactional
-    fun updateBalance(accountId: UUID, newAmount: BigDecimal) {
-
-        //check 1
-        require(newAmount > BigDecimal.ZERO) { "Balance cannot be negative" }
+    fun updateBalance(accountId: AccountId, newAmount: Money) {
 
         val account = getAccount(accountId)
-        //check 2
+
+        //check 1
         if (account.status != AccountStatus.ACTIVE) {
             throw IllegalArgumentException("Cannot update balance of inactive account")
         }
@@ -59,8 +64,8 @@ class AccountService(
         accountRepository.updateBalance(accountId, newAmount)
 
         val event = BalanceUpdatedEvent(
-            accountId = accountId,
-            newBalance = newAmount,
+            accountId = accountId.value,
+            newBalance = newAmount.amount,
             occurredAt = Instant.now()
         )
 
@@ -71,10 +76,8 @@ class AccountService(
 
     }
 
-
     @Transactional
-    fun updateStatus(accountId: UUID, status: String) {
-        val newStatus = AccountStatus.valueOf(status) // convert to AccountStatus
-        accountRepository.updateStatus(accountId, newStatus)
+    fun updateStatus(accountId: AccountId, status: AccountStatus) {
+        accountRepository.updateStatus(accountId, status)
     }
 }

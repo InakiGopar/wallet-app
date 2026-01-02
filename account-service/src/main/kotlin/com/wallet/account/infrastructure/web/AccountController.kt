@@ -1,5 +1,8 @@
 package com.wallet.account.infrastructure.web
 
+import com.wallet.account.domian.models.microTypes.AccountId
+import com.wallet.account.domian.models.microTypes.AccountStatus
+import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.infrastructure.web.dtos.response.AccountResponse
 import com.wallet.account.infrastructure.web.dtos.request.CreateAccountRequest
 import com.wallet.account.infrastructure.web.dtos.request.UpdateStatusRequest
@@ -24,17 +27,17 @@ class AccountController(
     fun createAccount(@RequestBody request: CreateAccountRequest): ResponseEntity<AccountResponse> {
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(AccountResponse.from(accountService.createAccount(request.currency)))
+            .body(AccountResponse.from(accountService.createAccount(Currency.valueOf(request.currency))))
     }
 
     @GetMapping("/{accountId}")
      fun getAccount(@PathVariable accountId: UUID): AccountResponse {
-        return AccountResponse.from(accountService.getAccount(accountId))
+        return AccountResponse.from(accountService.getAccount(AccountId(accountId)))
     }
 
     @PatchMapping("/{accountId}")
     fun updateStatus(@PathVariable accountId: UUID, @RequestBody request: UpdateStatusRequest): ResponseEntity<Void> {
-        accountService.updateStatus(accountId, request.status);
+        accountService.updateStatus(AccountId(accountId), AccountStatus.valueOf(request.status))
         return ResponseEntity(HttpStatus.NO_CONTENT)
     }
 

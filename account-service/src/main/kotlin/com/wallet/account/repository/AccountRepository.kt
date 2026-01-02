@@ -1,13 +1,14 @@
 package com.wallet.account.repository
 
 import com.wallet.account.domian.models.Account
-import com.wallet.account.domian.models.AccountStatus
-import java.math.BigDecimal
-import java.util.UUID
+import com.wallet.account.domian.models.microTypes.AccountId
+import com.wallet.account.domian.models.microTypes.AccountStatus
+import com.wallet.account.domian.models.microTypes.Money
+
 
 interface AccountRepository {
     fun create(account: Account): Account
-    fun findById(accountId: UUID): Account?
-    fun updateBalance(accountId: UUID, newAmount: BigDecimal)
-    fun updateStatus(accountId: UUID, status: AccountStatus)
+    fun findById(accountId: AccountId): Account?
+    fun updateBalance(accountId: AccountId, newAmount: Money)
+    fun updateStatus(accountId: AccountId, status: AccountStatus)
 }

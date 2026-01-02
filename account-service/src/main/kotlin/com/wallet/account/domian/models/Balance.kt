@@ -1,11 +1,12 @@
 package com.wallet.account.domian.models
 
-import java.math.BigDecimal
+import com.wallet.account.domian.models.microTypes.AccountId
+import com.wallet.account.domian.models.microTypes.Money
 import java.time.Instant
-import java.util.UUID
+
 
 data class Balance(
-    val accountId: UUID,
-    val amount: BigDecimal,
+    val accountId: AccountId,
+    val money: Money,
     val updatedAt: Instant,
 )
