@@ -3,9 +3,9 @@ package com.wallet.account.infrastructure.web
 import com.wallet.account.domian.models.microTypes.AccountId
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.microTypes.Currency
-import com.wallet.account.infrastructure.web.dtos.response.AccountResponse
-import com.wallet.account.infrastructure.web.dtos.request.CreateAccountRequest
-import com.wallet.account.infrastructure.web.dtos.request.UpdateStatusRequest
+import com.wallet.account.dtos.web.response.AccountResponse
+import com.wallet.account.dtos.web.request.CreateAccountRequest
+import com.wallet.account.dtos.web.request.UpdateStatusRequest
 import com.wallet.account.service.AccountService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

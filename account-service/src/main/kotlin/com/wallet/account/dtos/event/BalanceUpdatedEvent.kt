@@ -1,4 +1,4 @@
-package com.wallet.account.infrastructure.messaging.events
+package com.wallet.account.dtos.event
 
 import java.math.BigDecimal
 import java.time.Instant

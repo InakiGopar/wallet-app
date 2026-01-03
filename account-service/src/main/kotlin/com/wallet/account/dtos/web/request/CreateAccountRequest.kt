@@ -1,4 +1,4 @@
-package com.wallet.account.infrastructure.web.dtos.request
+package com.wallet.account.dtos.web.request
 
 data class CreateAccountRequest(
     val currency: String,

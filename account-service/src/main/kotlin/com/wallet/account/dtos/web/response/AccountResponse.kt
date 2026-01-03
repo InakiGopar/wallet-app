@@ -1,4 +1,4 @@
-package com.wallet.account.infrastructure.web.dtos.response
+package com.wallet.account.dtos.web.response
 
 import com.wallet.account.domian.models.Account
 import java.math.BigDecimal
@@ -13,10 +13,10 @@ data class AccountResponse(
     companion object {
         fun from(account: Account): AccountResponse =
             AccountResponse(
-                accountId = account.accountId,
-                currency = account.currency,
+                accountId = account.accountId.value,
+                currency = account.currency.name,
                 status = account.status.name,
-                balance = account.balance.amount
+                balance = account.balance.money.amount
             )
     }
 }

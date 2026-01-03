@@ -1,7 +1,7 @@
 package com.wallet.account.infrastructure.messaging.publisher
 
 import com.wallet.account.infrastructure.messaging.config.RabbitConfig
-import com.wallet.account.infrastructure.messaging.events.DomainEvent
+import com.wallet.account.dtos.event.DomainEvent
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
 

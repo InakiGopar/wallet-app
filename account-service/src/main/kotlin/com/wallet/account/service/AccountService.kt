@@ -1,12 +1,14 @@
 package com.wallet.account.service
 
+import com.wallet.account.domian.exceptions.AccountNotFoundException
+import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.Balance
 import com.wallet.account.domian.models.microTypes.AccountId
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
-import com.wallet.account.infrastructure.messaging.events.BalanceUpdatedEvent
+import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
 import com.wallet.account.domian.repository.AccountRepository
 import org.springframework.stereotype.Service
@@ -47,7 +49,7 @@ class AccountService(
 
     fun getAccount(accountId: AccountId): Account {
         return accountRepository.findById(accountId)
-            ?: throw IllegalArgumentException("Account with id $accountId not found")
+            ?: throw AccountNotFoundException(accountId)
     }
 
 
@@ -58,7 +60,7 @@ class AccountService(
 
         //check 1
         if (account.status != AccountStatus.ACTIVE) {
-            throw IllegalArgumentException("Cannot update balance of inactive account")
+            throw InvalidAccountStateException(accountId, account.status)
         }
 
         accountRepository.updateBalance(accountId, newAmount)

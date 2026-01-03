@@ -47,6 +47,9 @@ dependencies {
     // 🐇 RabbitMQ (AMQP)
     implementation("org.springframework.boot:spring-boot-starter-amqp")
 
+    // 📛 Zalando
+    implementation("org.zalando:problem-spring-web-starter:0.29.1")
+
     // ⚙️ jOOQ codegen (build-time)
     jooqGenerator("org.jooq:jooq-codegen:$jooqVersion")
     jooqGenerator("org.postgresql:postgresql")
