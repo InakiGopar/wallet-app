@@ -14,6 +14,7 @@ class TransactionCreatedListener(
     @RabbitListener(queues = ["account.transaction.created"])
     fun handle(event: TransactionCreatedEvent) {
 
+        //mapping the primitive types to domian types
         val accountId = AccountId(event.accountId)
         val newAmount = Money(event.amount, event.currency)
 

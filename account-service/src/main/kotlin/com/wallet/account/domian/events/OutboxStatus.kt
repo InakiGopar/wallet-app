@@ -1,5 +1,7 @@
 package com.wallet.account.domian.events
 
-//TODO
-class OutboxStatus {
+enum class OutboxStatus {
+    PENDING,
+    SENT,
+    FAILED
 }

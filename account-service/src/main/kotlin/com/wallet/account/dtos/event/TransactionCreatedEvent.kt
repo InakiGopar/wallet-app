@@ -12,4 +12,4 @@ data class TransactionCreatedEvent(
     val currency: Currency,
     val createdAt: Instant,
     override val occurredAt: Instant
-) : DomainEvent
+) : EventMessage

@@ -1,5 +1,7 @@
 package com.wallet.account.service
 
+import com.wallet.account.domian.events.AggregateType
+import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.exceptions.AccountNotFoundException
 import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
@@ -8,9 +10,9 @@ import com.wallet.account.domian.models.Balance
 import com.wallet.account.domian.models.microTypes.AccountId
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
-import com.wallet.account.dtos.event.BalanceUpdatedEvent
-import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
 import com.wallet.account.domian.repository.AccountRepository
+import com.wallet.account.dtos.event.BalanceUpdatedEvent
+import com.wallet.account.utils.serializer.EventSerializer
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -20,7 +22,8 @@ import java.util.UUID
 @Service
 class AccountService(
     private val accountRepository: AccountRepository,
-    private val eventPublisher: EventPublisher
+    private val outboxService: OutboxService,
+    private val eventSerializer: EventSerializer
 ) {
     @Transactional
     fun createAccount(currency: Currency): Account {
@@ -65,18 +68,24 @@ class AccountService(
 
         accountRepository.updateBalance(accountId, newAmount)
 
-        val event = BalanceUpdatedEvent(
-            accountId = accountId.value,
-            newBalance = newAmount.amount,
-            occurredAt = Instant.now()
+        //Convert to JSON
+        //payload is the domain event data
+        val payload = eventSerializer.serialize(
+            BalanceUpdatedEvent(
+                accountId = account.accountId.value,
+                newBalance = newAmount.amount,
+                occurredAt = Instant.now()
+            )
         )
-
-        eventPublisher.publish(
-            "balance.update",
-            event
+        //call the outbox service
+        outboxService.registerEvent(
+            aggregateId = account.accountId.value,
+            aggregateType = AggregateType.ACCOUNT,
+            eventType = EventType.BALANCE_UPDATED,
+            payload = payload
         )
-
     }
+
 
     @Transactional
     fun updateStatus(accountId: AccountId, status: AccountStatus) {

@@ -8,4 +8,4 @@ data class BalanceUpdatedEvent(
     val accountId: UUID,
     val newBalance: BigDecimal,
     override val occurredAt: Instant
-) : DomainEvent
+) : EventMessage

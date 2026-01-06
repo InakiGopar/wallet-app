@@ -2,6 +2,6 @@ package com.wallet.account.dtos.event
 
 import java.time.Instant
 
-interface DomainEvent {
+interface EventMessage {
     val occurredAt: Instant
 }
