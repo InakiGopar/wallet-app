@@ -3,18 +3,22 @@ package com.wallet.account.infrastructure.messaging.dispatcher
 import com.wallet.account.domian.repository.OutboxRepository
 import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
+@Component
 class OutboxDispatcher(
     private val outboxRepository: OutboxRepository,
     private val eventPublisher: EventPublisher
 ) {
 
 
+    @Transactional
     @Scheduled(fixedDelay = 1000)
     fun dispatch() {
 
         //Polling
-        val events = outboxRepository.findPending(limit = 50)
+        val events = outboxRepository.findPendingForUpdate(limit = 50)
 
         events.forEach { event ->
             try {

@@ -1,27 +1,106 @@
 package com.wallet.account.infrastructure.persistence.jooq
 
+import com.wallet.account.domian.events.AggregateType
+import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.events.OutboxEvent
+import com.wallet.account.domian.events.OutboxStatus
 import com.wallet.account.domian.repository.OutboxRepository
+import com.wallet.account.infrastructure.persistence.jooq.extensions.toInstantUtc
+import com.wallet.account.infrastructure.persistence.jooq.extensions.toLocalDateTimeUtc
+import com.wallet.account.jooq.tables.references.OUTBOX_EVENT
+import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 
-
 @Repository
-class JooqOutboxRepository : OutboxRepository {
+class JooqOutboxRepository(
+    private val dsl: DSLContext
+) : OutboxRepository {
     override fun save(event: OutboxEvent) {
-        TODO("Not yet implemented")
+        dsl.insertInto(OUTBOX_EVENT)
+            .set(OUTBOX_EVENT.ID, event.id)
+            .set(OUTBOX_EVENT.AGGREGATE_ID, event.aggregateId)
+            .set(OUTBOX_EVENT.AGGREGATE_TYPE, event.aggregateType.name)
+            .set(OUTBOX_EVENT.TYPE, event.type.name)
+            .set(OUTBOX_EVENT.PAYLOAD, event.payload)
+            .set(OUTBOX_EVENT.STATUS, event.status.name)
+            .set(OUTBOX_EVENT.OCCURRED_AT, event.occurredAt.toLocalDateTimeUtc())
+            .execute()
     }
 
+    /**
+     * Passive read of pending outbox events.
+     *
+     * Intended for:
+     * - tests
+     * - debugging / admin queries
+     * - observability / metrics
+     *
+     * ⚠️ This method does NOT apply row locking and MUST NOT be used
+     * by the production dispatcher in a multi-instance environment.
+     */
     override fun findPending(limit: Int): List<OutboxEvent> {
-        TODO("Not yet implemented")
+        return dsl.selectFrom(OUTBOX_EVENT)
+            .where(OUTBOX_EVENT.STATUS.eq(OutboxStatus.PENDING.name))
+            .orderBy(OUTBOX_EVENT.CREATED_AT.asc())
+            .limit(limit)
+            .fetch { r ->
+                OutboxEvent(
+                    id = r.id!!,
+                    aggregateId = r.aggregateId!!,
+                    aggregateType = AggregateType.valueOf(r.aggregateType!!),
+                    type = EventType.valueOf(r.type!!),
+                    payload = r.payload!!,
+                    status = OutboxStatus.valueOf(r.status!!),
+                    occurredAt = r.occurredAt!!.toInstantUtc(),
+                )
+            }
+    }
+
+    /**
+     * Retrieves pending outbox events applying row-level locking
+     * (FOR UPDATE SKIP LOCKED).
+     *
+     * Intended for:
+     * - production outbox dispatcher
+     * - concurrent / multi-instance environments
+     *
+     * Guarantees that each event is consumed by a single dispatcher
+     * instance, preventing duplicate publications.
+     */
+    override fun findPendingForUpdate(limit: Int): List<OutboxEvent> {
+        return dsl
+            .selectFrom(OUTBOX_EVENT)
+            .where(OUTBOX_EVENT.STATUS.eq(OutboxStatus.PENDING.name))
+            .orderBy(OUTBOX_EVENT.CREATED_AT.asc())
+            .limit(limit)
+            .forUpdate()
+            .skipLocked()
+            .fetch { r ->
+                OutboxEvent(
+                    id = r.id!!,
+                    aggregateId = r.aggregateId!!,
+                    aggregateType = AggregateType.valueOf(r.aggregateType!!),
+                    type = EventType.valueOf(r.type!!),
+                    payload = r.payload!!,
+                    status = OutboxStatus.valueOf(r.status!!),
+                    occurredAt = r.occurredAt!!.toInstantUtc(),
+                )
+            }
     }
 
     override fun markAsSent(eventId: UUID) {
-        TODO("Not yet implemented")
+        dsl.update(OUTBOX_EVENT)
+            .set(OUTBOX_EVENT.STATUS, OutboxStatus.SENT.name)
+            .where(OUTBOX_EVENT.ID.eq(eventId))
+            .execute()
     }
 
     override fun markAsFailed(eventId: UUID) {
-        TODO("Not yet implemented")
+        dsl.update(OUTBOX_EVENT)
+            .set(OUTBOX_EVENT.STATUS, OutboxStatus.FAILED.name)
+            .where(OUTBOX_EVENT.ID.eq(eventId))
+            .execute()
     }
 }
