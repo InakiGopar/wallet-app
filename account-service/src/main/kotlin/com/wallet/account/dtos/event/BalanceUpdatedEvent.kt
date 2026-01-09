@@ -6,6 +6,8 @@ import java.util.UUID
 
 data class BalanceUpdatedEvent(
     val accountId: UUID,
+    val previousBalance: BigDecimal,
+    val delta: BigDecimal,
     val newBalance: BigDecimal,
     override val occurredAt: Instant
 ) : EventMessage

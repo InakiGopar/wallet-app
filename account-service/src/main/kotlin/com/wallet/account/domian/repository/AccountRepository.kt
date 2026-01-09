@@ -9,6 +9,6 @@ import com.wallet.account.domian.models.microTypes.Money
 interface AccountRepository {
     fun create(account: Account): Account
     fun findById(accountId: AccountId): Account?
-    fun updateBalance(accountId: AccountId, newAmount: Money)
+    fun updateBalance(accountId: AccountId, newBalance: Money)
     fun updateStatus(accountId: AccountId, status: AccountStatus)
 }

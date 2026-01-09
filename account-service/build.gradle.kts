@@ -17,6 +17,12 @@ plugins {
     id("nu.studer.jooq") version "9.0"
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.jooq:jooq-bom:3.19.28")
+    }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -38,11 +44,11 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     // 🧬 jOOQ runtime
-    implementation("org.jooq:jooq:$jooqVersion")
+    implementation("org.jooq:jooq")
 
     // ⚙️ jOOQ codegen
-    jooqGenerator("org.jooq:jooq-codegen:$jooqVersion")
-    jooqGenerator("org.jooq:jooq-meta:$jooqVersion")
+    jooqGenerator("org.jooq:jooq-codegen")
+    jooqGenerator("org.jooq:jooq-meta")
     jooqGenerator("org.postgresql:postgresql:42.7.3")
 
     // 🛫 Flyway
@@ -60,6 +66,7 @@ dependencies {
 
     // 🧪 Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("io.mockk:mockk:1.13.10")
 }
 
 

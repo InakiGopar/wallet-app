@@ -3,6 +3,7 @@ package com.wallet.account.service
 import com.wallet.account.domian.events.AggregateType
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.exceptions.AccountNotFoundException
+import com.wallet.account.domian.exceptions.InsufficientFundsException
 import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
 import com.wallet.account.domian.models.microTypes.AccountStatus
@@ -57,7 +58,7 @@ class AccountService(
 
 
     @Transactional
-    fun updateBalance(accountId: AccountId, newAmount: Money) {
+    fun updateBalance(accountId: AccountId, delta: Money) {
 
         val account = getAccount(accountId)
 
@@ -66,18 +67,32 @@ class AccountService(
             throw InvalidAccountStateException(accountId, account.status)
         }
 
-        accountRepository.updateBalance(accountId, newAmount)
+        val previousBalance = account.balance.money.amount
+        val newBalance = Money(previousBalance + delta.amount, account.currency)
+
+        //check 2
+        if (previousBalance + delta.amount < BigDecimal.ZERO) {
+            throw InsufficientFundsException(
+                accountId = accountId,
+                currentBalance = account.balance.money,
+                attemptedDelta = delta
+            )
+        }
+
+        accountRepository.updateBalance(accountId, newBalance)
 
         //Convert to JSON
-        //payload is the domain event data
+        //Payload is the domain event data
         val payload = eventSerializer.serialize(
             BalanceUpdatedEvent(
                 accountId = account.accountId.value,
-                newBalance = newAmount.amount,
+                previousBalance = previousBalance,
+                delta = delta.amount,
+                newBalance = newBalance.amount,
                 occurredAt = Instant.now()
             )
         )
-        //call the outbox service
+        //Call the outbox service
         outboxService.registerEvent(
             aggregateId = account.accountId.value,
             aggregateType = AggregateType.ACCOUNT,
