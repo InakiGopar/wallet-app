@@ -3,12 +3,12 @@ package com.wallet.account.service
 import com.wallet.account.domian.events.AggregateType
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.exceptions.AccountNotFoundException
-import com.wallet.account.domian.exceptions.InsufficientFundsException
 import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.Balance
 import com.wallet.account.domian.models.microTypes.AccountId
+import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.domian.repository.AccountRepository
@@ -58,7 +58,7 @@ class AccountService(
 
 
     @Transactional
-    fun updateBalance(accountId: AccountId, delta: Money) {
+    fun updateBalance(accountId: AccountId, delta: BalanceDelta) {
 
         val account = getAccount(accountId)
 
@@ -70,14 +70,6 @@ class AccountService(
         val previousBalance = account.balance.money.amount
         val newBalance = Money(previousBalance + delta.amount, account.currency)
 
-        //check 2
-        if (previousBalance + delta.amount < BigDecimal.ZERO) {
-            throw InsufficientFundsException(
-                accountId = accountId,
-                currentBalance = account.balance.money,
-                attemptedDelta = delta
-            )
-        }
 
         accountRepository.updateBalance(accountId, newBalance)
 

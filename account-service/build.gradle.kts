@@ -3,7 +3,6 @@ repositories {
     mavenCentral()
 }
 
-
 plugins {
     // Spring
     id("org.springframework.boot") version "3.4.1"
