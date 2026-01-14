@@ -1,7 +1,9 @@
 package com.wallet.account.infrastructure.messaging.dispatcher
 
 import com.wallet.account.domian.repository.OutboxRepository
+import com.wallet.account.infrastructure.messaging.exception.EventPublishException
 import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
+import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -31,7 +33,10 @@ class OutboxDispatcher(
                 //update the status PENDING to SENT
                 outboxRepository.markAsSent(event.id)
 
-            } catch (ex: Exception) {
+            } catch (ex: EventPublishException) {
+                LoggerFactory.getLogger(OutboxDispatcher::class.java)
+                    .error("Error publishing outbox event ${event.id}", ex)
+
                 //If an error occurs change the status PENDING to FAILED
                 outboxRepository.markAsFailed(event.id)
             }

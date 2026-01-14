@@ -31,12 +31,13 @@ class AccountServiceTest {
 
     @MockK
     lateinit var accountRepository: AccountRepository
-    @MockK lateinit var outboxService: OutboxService
-    @MockK lateinit var eventSerializer: EventSerializer
+    @MockK
+    lateinit var outboxService: OutboxService
+    @MockK
+    lateinit var eventSerializer: EventSerializer
 
     @InjectMockKs
     lateinit var accountService: AccountService
-
 
 
 
