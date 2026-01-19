@@ -34,7 +34,7 @@ class OutboxDispatcherTest {
     fun `should publish event and mark it as SENT`() {
         // Arrange
         val event = OutboxEvent(
-            id = UUID.randomUUID(),
+            eventId = UUID.randomUUID(),
             aggregateId = UUID.randomUUID(),
             aggregateType = AggregateType.ACCOUNT,
             type = EventType.BALANCE_UPDATED,
@@ -46,7 +46,7 @@ class OutboxDispatcherTest {
 
         every { outboxRepository.findPendingForUpdate(50) } returns listOf(event)
         every { eventPublisher.publish(any(), any()) } just Runs
-        every { outboxRepository.markAsSent(event.id) } just Runs
+        every { outboxRepository.markAsSent(event.eventId) } just Runs
 
         // Act
         dispatcher.dispatch()
@@ -60,7 +60,7 @@ class OutboxDispatcherTest {
         }
 
         verify(exactly = 1) {
-            outboxRepository.markAsSent(event.id)
+            outboxRepository.markAsSent(event.eventId)
         }
 
         verify(exactly = 0) {
@@ -73,7 +73,7 @@ class OutboxDispatcherTest {
     fun `should mark event as FAILED when publishing fails`() {
         // Arrange
         val event = OutboxEvent(
-            id = UUID.randomUUID(),
+            eventId = UUID.randomUUID(),
             aggregateId = UUID.randomUUID(),
             aggregateType = AggregateType.ACCOUNT,
             type = EventType.BALANCE_UPDATED,
@@ -88,14 +88,14 @@ class OutboxDispatcherTest {
             eventPublisher.publish(any(), any())
         } throws EventPublishException("Rabbit down")
 
-        every { outboxRepository.markAsFailed(event.id) } just Runs
+        every { outboxRepository.markAsFailed(event.eventId) } just Runs
 
         // Act
         dispatcher.dispatch()
 
         // Assert
         verify(exactly = 1) {
-            outboxRepository.markAsFailed(event.id)
+            outboxRepository.markAsFailed(event.eventId)
         }
 
         verify(exactly = 0) {

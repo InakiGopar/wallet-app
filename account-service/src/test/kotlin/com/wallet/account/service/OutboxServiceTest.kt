@@ -57,7 +57,7 @@ class OutboxServiceTest {
 
         val savedEvent = slot.captured
 
-        assertNotNull(savedEvent.id)
+        assertNotNull(savedEvent.eventId)
         assertEquals(aggregateId, savedEvent.aggregateId)
         assertEquals(aggregateType, savedEvent.aggregateType)
         assertEquals(eventType, savedEvent.type)

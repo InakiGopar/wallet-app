@@ -19,7 +19,7 @@ class JooqOutboxRepository(
 ) : OutboxRepository {
     override fun save(event: OutboxEvent) {
         dsl.insertInto(OUTBOX_EVENT)
-            .set(OUTBOX_EVENT.ID, event.id)
+            .set(OUTBOX_EVENT.ID, event.eventId)
             .set(OUTBOX_EVENT.AGGREGATE_ID, event.aggregateId)
             .set(OUTBOX_EVENT.AGGREGATE_TYPE, event.aggregateType.name)
             .set(OUTBOX_EVENT.TYPE, event.type.name)
@@ -27,6 +27,22 @@ class JooqOutboxRepository(
             .set(OUTBOX_EVENT.STATUS, event.status.name)
             .set(OUTBOX_EVENT.OCCURRED_AT, event.occurredAt.toLocalDateTimeUtc())
             .execute()
+    }
+
+    override fun findById(eventId: UUID): OutboxEvent? {
+        return dsl.selectFrom(OUTBOX_EVENT)
+            .where(OUTBOX_EVENT.ID.eq(eventId))
+            .fetchOne {
+                r -> OutboxEvent(
+                eventId = r.id!!,
+                aggregateId = r.aggregateId!!,
+                aggregateType = AggregateType.valueOf(r.aggregateType!!),
+                type = EventType.valueOf(r.type!!),
+                payload = r.payload!!,
+                status = OutboxStatus.valueOf(r.status!!),
+                occurredAt = r.occurredAt!!.toInstantUtc(),
+                )
+            }
     }
 
     /**
@@ -47,7 +63,7 @@ class JooqOutboxRepository(
             .limit(limit)
             .fetch { r ->
                 OutboxEvent(
-                    id = r.id!!,
+                    eventId = r.id!!,
                     aggregateId = r.aggregateId!!,
                     aggregateType = AggregateType.valueOf(r.aggregateType!!),
                     type = EventType.valueOf(r.type!!),
@@ -79,7 +95,7 @@ class JooqOutboxRepository(
             .skipLocked()
             .fetch { r ->
                 OutboxEvent(
-                    id = r.id!!,
+                    eventId = r.id!!,
                     aggregateId = r.aggregateId!!,
                     aggregateType = AggregateType.valueOf(r.aggregateType!!),
                     type = EventType.valueOf(r.type!!),

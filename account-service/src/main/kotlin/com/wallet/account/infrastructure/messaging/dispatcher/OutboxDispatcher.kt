@@ -31,14 +31,14 @@ class OutboxDispatcher(
                 )
 
                 //update the status PENDING to SENT
-                outboxRepository.markAsSent(event.id)
+                outboxRepository.markAsSent(event.eventId)
 
             } catch (ex: EventPublishException) {
                 LoggerFactory.getLogger(OutboxDispatcher::class.java)
-                    .error("Error publishing outbox event ${event.id}", ex)
+                    .error("Error publishing outbox event ${event.eventId}", ex)
 
                 //If an error occurs change the status PENDING to FAILED
-                outboxRepository.markAsFailed(event.id)
+                outboxRepository.markAsFailed(event.eventId)
             }
         }
     }

@@ -5,7 +5,7 @@ import java.util.UUID
 
 
 data class OutboxEvent(
-    val id: UUID,
+    val eventId: UUID,
     val aggregateId: UUID,
     val aggregateType: AggregateType,
     val type: EventType,
