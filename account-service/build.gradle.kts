@@ -66,6 +66,9 @@ dependencies {
     // 🧪 Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
+    testImplementation("com.ninja-squad:springmockk:4.0.2")
 }
 
 
