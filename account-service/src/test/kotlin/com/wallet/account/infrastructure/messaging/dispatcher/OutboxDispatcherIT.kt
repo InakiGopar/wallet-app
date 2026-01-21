@@ -10,7 +10,7 @@ import com.wallet.account.infrastructure.messaging.exception.EventPublishExcepti
 import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
 import io.mockk.every
 import io.mockk.verify
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
@@ -31,7 +31,7 @@ class OutboxDispatcherIT {
     companion object {
         @Container
         val postgres = PostgreSQLContainer("postgres:16")
-            .withDatabaseName("wallet")
+            .withDatabaseName("com/wallet")
             .withUsername("test")
             .withPassword("test")
 
@@ -75,7 +75,7 @@ class OutboxDispatcherIT {
 
         val persisted = outboxRepository.findById(event.eventId)!!
 
-        assertThat(persisted.status).isEqualTo(OutboxStatus.SENT)
+        Assertions.assertThat(persisted.status).isEqualTo(OutboxStatus.SENT)
 
         verify {
             eventPublisher.publish("BALANCE_UPDATED", any())
@@ -107,8 +107,8 @@ class OutboxDispatcherIT {
 
         // Assert
         val persisted = outboxRepository.findById(event.eventId)
-        assertThat(persisted).isNotNull
-        assertThat(persisted!!.status).isEqualTo(OutboxStatus.FAILED)
+        Assertions.assertThat(persisted).isNotNull
+        Assertions.assertThat(persisted!!.status).isEqualTo(OutboxStatus.FAILED)
     }
 
 

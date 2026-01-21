@@ -12,8 +12,11 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.jetbrains.kotlin.plugin.spring") version "2.2.21"
 
-    // jOOQ
+    // JOOQ
     id("nu.studer.jooq") version "9.0"
+
+    //Flyway
+    id("org.flywaydb.flyway") version "10.20.0"
 }
 
 dependencyManagement {
@@ -63,17 +66,20 @@ dependencies {
     // 📛 Zalando Problem
     implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
-    // 🧪 Tests
+    // 🧪 Tests unitarios
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("com.ninja-squad:springmockk:4.0.2")
+
+    // Testcontainers
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
-    testImplementation("com.ninja-squad:springmockk:4.0.2")
 }
 
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    exclude("**/*IT.class") //exclude integration test
 }
 
 jooq {
@@ -116,3 +122,37 @@ jooq {
         }
     }
 }
+
+
+flyway {
+    url = "jdbc:postgresql://localhost:5432/account_db"
+    user = "postgres"
+    password = ""
+    locations = arrayOf("filesystem:src/main/resources/db/migration")
+}
+
+tasks.register("dbCodegen") {
+    group = "database"
+    description = "Runs Flyway migrations and then generates jOOQ sources"
+    dependsOn("flywayMigrate", "generateJooq")
+}
+
+tasks.register<Test>("integrationTest") {
+    group = "verification"
+    description = "Runs integration tests with Testcontainers"
+
+    useJUnitPlatform()
+
+    // only integration tests
+    include("**/*IT.class")
+
+    environment("TESTCONTAINERS_RYUK_DISABLED", "false")
+    environment(
+        "DOCKER_HOST",
+        System.getenv("DOCKER_HOST") ?: "unix:///var/run/docker.sock"
+    )
+
+    shouldRunAfter(tasks.test)
+}
+
+
