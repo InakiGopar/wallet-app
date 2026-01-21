@@ -72,14 +72,17 @@ dependencies {
     testImplementation("com.ninja-squad:springmockk:4.0.2")
 
     // Testcontainers
+    testImplementation("org.testcontainers:testcontainers:2.0.2")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:rabbitmq")
+
+
 }
 
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    exclude("**/*IT.class") //exclude integration test
 }
 
 jooq {
@@ -138,21 +141,19 @@ tasks.register("dbCodegen") {
 }
 
 tasks.register<Test>("integrationTest") {
-    group = "verification"
-    description = "Runs integration tests with Testcontainers"
-
     useJUnitPlatform()
 
-    // only integration tests
-    include("**/*IT.class")
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-    environment("TESTCONTAINERS_RYUK_DISABLED", "false")
-    environment(
-        "DOCKER_HOST",
-        System.getenv("DOCKER_HOST") ?: "unix:///var/run/docker.sock"
-    )
+    include("**/*IT*")
 
-    shouldRunAfter(tasks.test)
+    afterSuite(KotlinClosure2<TestDescriptor, TestResult, Unit>({ _, result ->
+        if (result.testCount == 0L) {
+            throw GradleException("No integration tests were executed!")
+        }
+    }))
 }
+
 
 
