@@ -19,7 +19,7 @@ class OutboxService(
         aggregateId: UUID,
         aggregateType: AggregateType,
         eventType: EventType,
-        payload: String //here goes the domain event data
+        payload: String //here goes the event data domain
     ) {
         val event = OutboxEvent(
             eventId = UUID.randomUUID(),
