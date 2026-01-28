@@ -10,6 +10,7 @@ data class TransactionCreatedEvent(
     val accountId: UUID,
     val amount: BigDecimal,
     val currency: Currency,
+    val type: String,
     val createdAt: Instant,
     override val occurredAt: Instant
 ) : EventMessage

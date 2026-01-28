@@ -1,9 +1,9 @@
 package com.wallet.account.infrastructure.persistence.jooq
 
 import com.wallet.account.domian.models.Account
+import com.wallet.account.domian.models.AccountId
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.Balance
-import com.wallet.account.domian.models.microTypes.AccountId
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.infrastructure.persistence.jooq.extensions.toInstantUtc

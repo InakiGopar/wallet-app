@@ -10,6 +10,7 @@ data class AccountResponse(
     val status: String,
     val balance: BigDecimal
 ) {
+    //mapper
     companion object {
         fun from(account: Account): AccountResponse =
             AccountResponse(

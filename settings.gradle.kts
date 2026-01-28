@@ -2,7 +2,7 @@ rootProject.name = "wallet-app"
 
 // microservices
 include("account-service")
-//include("transaction-service")
+include("transaction-service")
 
 pluginManagement {
     repositories {

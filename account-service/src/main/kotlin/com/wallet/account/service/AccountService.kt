@@ -5,12 +5,13 @@ import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.exceptions.AccountNotFoundException
 import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
+import com.wallet.account.domian.models.AccountId
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.Balance
-import com.wallet.account.domian.models.microTypes.AccountId
 import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
+import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import com.wallet.account.utils.serializer.EventSerializer
@@ -58,7 +59,7 @@ class AccountService(
 
 
     @Transactional
-    fun updateBalance(accountId: AccountId, delta: BalanceDelta) {
+    fun updateBalance(transactionId : TransactionId, accountId: AccountId, delta: BalanceDelta) {
 
         val account = getAccount(accountId)
 
@@ -77,6 +78,7 @@ class AccountService(
         //Payload is the domain event data
         val payload = eventSerializer.serialize(
             BalanceUpdatedEvent(
+                transactionId = transactionId.value,
                 accountId = account.accountId.value,
                 previousBalance = previousBalance,
                 delta = delta.amount,

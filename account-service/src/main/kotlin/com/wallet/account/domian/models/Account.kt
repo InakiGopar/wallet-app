@@ -1,9 +1,9 @@
 package com.wallet.account.domian.models
 
-import com.wallet.account.domian.models.microTypes.AccountId
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.microTypes.Currency
 import java.time.Instant
+import java.util.UUID
 
 data class Account(
     val accountId: AccountId,
@@ -12,3 +12,6 @@ data class Account(
     val createdAt: Instant,
     val balance: Balance,
 )
+
+@JvmInline
+value class AccountId(val value: UUID)

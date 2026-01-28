@@ -22,6 +22,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.math.BigDecimal
+import java.util.UUID
 
 @SpringBootTest
 @Testcontainers
@@ -65,11 +66,12 @@ class AccountServiceIT {
     @Test
     fun `should update balance and register outbox event`() {
         // given
+        val transactionId = UUID.randomUUID()
         val account = accountService.createAccount(Currency.ARS)
         val delta = BalanceDelta(BigDecimal("100.00"))
 
         // when
-        accountService.updateBalance(account.accountId, delta)
+        accountService.updateBalance(transactionId, account.accountId, delta)
 
         // then - balance updated
         val updatedAccount = accountRepository.findById(account.accountId)!!
@@ -79,7 +81,7 @@ class AccountServiceIT {
 
         // then - outbox event created
         val events = outboxRepository.findPending(2)
-        assertEquals(1, events.size)
+        assertTrue(events.size == 1)
 
         val event = events.first()
         assertEquals(AggregateType.ACCOUNT, event.aggregateType)
@@ -98,6 +100,7 @@ class AccountServiceIT {
         // when / then
         assertThrows<InvalidAccountStateException> {
             accountService.updateBalance(
+                        UUID.randomUUID(),
                 account.accountId,
                 BalanceDelta(BigDecimal("50"))
             )

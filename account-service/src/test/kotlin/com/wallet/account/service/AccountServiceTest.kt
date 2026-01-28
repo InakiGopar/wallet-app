@@ -70,6 +70,7 @@ class AccountServiceTest {
 
     @Test
     fun `updateBalance throws InvalidAccountStateException if account is not ACTIVE`() {
+        val transactionId = UUID.randomUUID()
         val acc = account(
             balance = BigDecimal("100"),
             status = AccountStatus.SUSPENDED
@@ -79,6 +80,7 @@ class AccountServiceTest {
 
         assertThrows<InvalidAccountStateException> {
             accountService.updateBalance(
+                transactionId,
                 acc.accountId,
                 BalanceDelta(BigDecimal("10"))
             )
@@ -110,6 +112,8 @@ class AccountServiceTest {
 
     @Test
     fun `updateBalance updates balance and publishes event when account is ACTIVE`() {
+        val transactionId = UUID.randomUUID()
+
         val acc = account(
             balance = BigDecimal("100"),
             status = AccountStatus.ACTIVE
@@ -121,6 +125,7 @@ class AccountServiceTest {
         every { outboxService.registerEvent(any(), any(), any(), any()) } returns Unit
 
         accountService.updateBalance(
+            transactionId,
             acc.accountId,
             BalanceDelta(BigDecimal("50"))
         )
