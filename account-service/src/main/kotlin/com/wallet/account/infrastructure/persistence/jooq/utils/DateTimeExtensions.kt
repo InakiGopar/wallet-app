@@ -1,4 +1,4 @@
-package com.wallet.account.infrastructure.persistence.jooq.extensions
+package com.wallet.account.infrastructure.persistence.jooq.utils
 
 import java.time.Instant
 import java.time.LocalDateTime

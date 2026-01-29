@@ -41,7 +41,7 @@ class TransactionService(
         val transaction = Transaction(
             transactionId = transactionId,
             accountId = AccountId(request.accountId),
-            amount = Money(request.amount, request.currency),
+            money = Money(request.amount, request.currency),
             type = TransactionType.valueOf(request.type),
             status = TransactionStatus.PENDING,
             createdAt = Instant.now()
@@ -53,8 +53,8 @@ class TransactionService(
         val payload = eventSerializer.serialize(TransactionCreatedEvent(
             transactionId = transactionId.value,
             accountId = transaction.accountId.value,
-            amount = transaction.amount.amount,
-            currency = transaction.amount.currency,
+            amount = transaction.money.amount,
+            currency = transaction.money.currency,
             type = transaction.type.name,
             createdAt = transaction.createdAt,
             occurredAt = Instant.now()

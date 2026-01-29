@@ -19,8 +19,8 @@ data class CreateTransactionResponse(
             CreateTransactionResponse(
                 transactionId = transaction.transactionId.value,
                 accountId = transaction.accountId.value,
-                amount = transaction.amount.amount,
-                currency = transaction.amount.currency,
+                amount = transaction.money.amount,
+                currency = transaction.money.currency,
                 type = transaction.type.name,
             )
     }

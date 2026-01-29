@@ -11,8 +11,9 @@ import java.time.Instant
 import java.util.UUID
 
 @Service
-class OutboxService {
-    private val outboxRepository: OutboxRepository
+class OutboxService(
+    private val outboxRepository : OutboxRepository
+) {
 
     @Transactional
     fun registerEvent(

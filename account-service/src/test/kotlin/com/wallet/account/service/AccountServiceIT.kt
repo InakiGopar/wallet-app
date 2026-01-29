@@ -7,6 +7,7 @@ import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
+import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.domian.repository.OutboxRepository
 import org.hibernate.validator.internal.util.Contracts.assertNotNull
@@ -66,7 +67,7 @@ class AccountServiceIT {
     @Test
     fun `should update balance and register outbox event`() {
         // given
-        val transactionId = UUID.randomUUID()
+        val transactionId = TransactionId(UUID.randomUUID())
         val account = accountService.createAccount(Currency.ARS)
         val delta = BalanceDelta(BigDecimal("100.00"))
 
@@ -94,13 +95,15 @@ class AccountServiceIT {
     @Test
     fun `should fail updating balance if account is not active`() {
         // given
+        val transactionId = TransactionId(UUID.randomUUID())
         val account = accountService.createAccount(Currency.ARS)
+
         accountService.updateStatus(account.accountId, AccountStatus.SUSPENDED)
 
         // when / then
         assertThrows<InvalidAccountStateException> {
             accountService.updateBalance(
-                        UUID.randomUUID(),
+                transactionId,
                 account.accountId,
                 BalanceDelta(BigDecimal("50"))
             )

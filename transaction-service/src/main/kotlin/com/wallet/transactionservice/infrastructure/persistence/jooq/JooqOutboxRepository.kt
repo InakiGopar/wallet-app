@@ -1,17 +1,16 @@
-package com.wallet.account.infrastructure.persistence.jooq
+package com.wallet.transactionservice.infrastructure.persistence.jooq
 
-import com.wallet.account.domian.events.AggregateType
-import com.wallet.account.domian.events.EventType
-import com.wallet.account.domian.events.OutboxEvent
-import com.wallet.account.domian.events.OutboxStatus
-import com.wallet.account.domian.repository.OutboxRepository
-import com.wallet.account.infrastructure.persistence.jooq.utils.toInstantUtc
-import com.wallet.account.infrastructure.persistence.jooq.utils.toLocalDateTimeUtc
-import com.wallet.account.jooq.tables.references.OUTBOX_EVENT
+import com.wallet.transaction.jooq.tables.references.OUTBOX_EVENT
+import com.wallet.transactionservice.domain.events.AggregateType
+import com.wallet.transactionservice.domain.events.EventType
+import com.wallet.transactionservice.domain.events.OutboxEvent
+import com.wallet.transactionservice.domain.events.OutboxStatus
+import com.wallet.transactionservice.domain.repository.OutboxRepository
+import com.wallet.transactionservice.infrastructure.persistence.jooq.utils.toInstantUtc
+import com.wallet.transactionservice.infrastructure.persistence.jooq.utils.toLocalDateTimeUtc
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.util.UUID
-
 
 @Repository
 class JooqOutboxRepository(
@@ -34,7 +33,7 @@ class JooqOutboxRepository(
         return dsl.selectFrom(OUTBOX_EVENT)
             .where(OUTBOX_EVENT.ID.eq(eventId))
             .fetchOne {
-                r -> OutboxEvent(
+                    r -> OutboxEvent(
                 eventId = r.id!!,
                 aggregateId = r.aggregateId!!,
                 aggregateType = AggregateType.valueOf(r.aggregateType!!),
@@ -42,7 +41,7 @@ class JooqOutboxRepository(
                 payload = r.payload!!,
                 status = OutboxStatus.valueOf(r.status!!),
                 occurredAt = r.occurredAt!!.toInstantUtc(),
-                )
+            )
             }
     }
 
@@ -60,7 +59,7 @@ class JooqOutboxRepository(
     override fun findPending(limit: Int): List<OutboxEvent> {
         return dsl.selectFrom(OUTBOX_EVENT)
             .where(OUTBOX_EVENT.STATUS.eq(OutboxStatus.PENDING.name))
-            .orderBy(OUTBOX_EVENT.CREATED_AT.asc())
+            .orderBy(OUTBOX_EVENT.OCCURRED_AT.asc())
             .limit(limit)
             .fetch { r ->
                 OutboxEvent(
@@ -90,7 +89,7 @@ class JooqOutboxRepository(
         return dsl
             .selectFrom(OUTBOX_EVENT)
             .where(OUTBOX_EVENT.STATUS.eq(OutboxStatus.PENDING.name))
-            .orderBy(OUTBOX_EVENT.CREATED_AT.asc())
+            .orderBy(OUTBOX_EVENT.OCCURRED_AT.asc())
             .limit(limit)
             .forUpdate()
             .skipLocked()

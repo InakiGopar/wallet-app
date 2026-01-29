@@ -1,22 +1,17 @@
 
-buildscript {
-    dependencies {
-        classpath("org.flywaydb:flyway-database-postgresql:10.20.0")
-    }
-}
-
 repositories {
     mavenCentral()
 }
 
 plugins {
+
+    // Kotlin
+    id("org.jetbrains.kotlin.jvm")
+    id("org.jetbrains.kotlin.plugin.spring")
+
     // Spring
     id("org.springframework.boot") version "3.4.1"
     id("io.spring.dependency-management") version "1.1.7"
-
-    // Kotlin
-    id("org.jetbrains.kotlin.jvm") version "2.2.21"
-    id("org.jetbrains.kotlin.plugin.spring") version "2.2.21"
 
     // JOOQ
     id("nu.studer.jooq") version "9.0"
@@ -83,6 +78,7 @@ dependencies {
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:rabbitmq")
 
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 }
 

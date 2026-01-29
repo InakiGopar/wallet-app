@@ -1,17 +1,10 @@
 
 
-buildscript {
-    dependencies {
-        classpath("org.flywaydb:flyway-database-postgresql:10.20.0")
-    }
-}
-
-
-
 plugins {
+
     //Kotlin
-    kotlin("jvm") version "2.2.21"
-    kotlin("plugin.spring") version "2.2.21"
+    id("org.jetbrains.kotlin.jvm")
+    id("org.jetbrains.kotlin.plugin.spring")
 
     //Spring
     id("org.springframework.boot") version "3.4.1"
@@ -50,6 +43,7 @@ dependencies {
 
     //Spring
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-json")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
@@ -139,7 +133,7 @@ jooq {
                     }
 
                     target.apply {
-                        packageName = "com.wallet.account.jooq"
+                        packageName = "com.wallet.transaction.jooq"
                         directory = "build/generated-src/jooq/main"
                     }
                 }

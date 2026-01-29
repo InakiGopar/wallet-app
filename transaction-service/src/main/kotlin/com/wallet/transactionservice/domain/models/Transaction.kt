@@ -9,7 +9,7 @@ import java.util.UUID
 data class Transaction(
     val transactionId: TransactionId,
     val accountId: AccountId,
-    val amount: Money,
+    val money: Money,
     val type: TransactionType,
     val status: TransactionStatus,
     val createdAt: Instant

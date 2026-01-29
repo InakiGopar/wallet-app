@@ -5,12 +5,13 @@ import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.exceptions.AccountNotFoundException
 import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
+import com.wallet.account.domian.models.AccountId
 import com.wallet.account.domian.models.Balance
-import com.wallet.account.domian.models.microTypes.AccountId
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
+import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.utils.serializer.EventSerializer
 import io.mockk.*
@@ -70,7 +71,7 @@ class AccountServiceTest {
 
     @Test
     fun `updateBalance throws InvalidAccountStateException if account is not ACTIVE`() {
-        val transactionId = UUID.randomUUID()
+        val transactionId = TransactionId(UUID.randomUUID())
         val acc = account(
             balance = BigDecimal("100"),
             status = AccountStatus.SUSPENDED
@@ -112,7 +113,7 @@ class AccountServiceTest {
 
     @Test
     fun `updateBalance updates balance and publishes event when account is ACTIVE`() {
-        val transactionId = UUID.randomUUID()
+        val transactionId = TransactionId(UUID.randomUUID())
 
         val acc = account(
             balance = BigDecimal("100"),

@@ -6,8 +6,8 @@ import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.Balance
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
-import com.wallet.account.infrastructure.persistence.jooq.extensions.toInstantUtc
-import com.wallet.account.infrastructure.persistence.jooq.extensions.toLocalDateTimeUtc
+import com.wallet.account.infrastructure.persistence.jooq.utils.toInstantUtc
+import com.wallet.account.infrastructure.persistence.jooq.utils.toLocalDateTimeUtc
 import com.wallet.account.jooq.tables.references.ACCOUNTS
 import com.wallet.account.jooq.tables.references.BALANCES
 import com.wallet.account.domian.repository.AccountRepository
