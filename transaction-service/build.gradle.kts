@@ -1,5 +1,4 @@
 
-
 plugins {
 
     //Kotlin
@@ -80,10 +79,8 @@ dependencies {
     testImplementation("com.ninja-squad:springmockk:4.0.2")
 
 
-    // Testcontainers BOM
-    testImplementation(platform("org.testcontainers:testcontainers-bom:1.19.7"))
-
-    // Testcontainers core
+    // Testcontainers
+    testImplementation("org.testcontainers:testcontainers:2.0.2")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:rabbitmq")
