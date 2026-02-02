@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component
 class BalanceUpdatedListener(
     private val transactionService: TransactionService
 ) {
-    @RabbitListener(queues = ["transaction.balance.updated"])
+    @RabbitListener(
+        queues = ["transaction.balance.updated"]
+    )
     fun handle(event: BalanceUpdatedEvent) {
         transactionService.markAsCompleted(event)
     }

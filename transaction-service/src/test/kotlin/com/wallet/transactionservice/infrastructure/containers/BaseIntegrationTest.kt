@@ -1,15 +1,17 @@
-package com.wallet.transactionservice.infrastructure.persistence
+package com.wallet.transactionservice.infrastructure.containers
 
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.transaction.annotation.Transactional
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
 @SpringBootTest
+@Transactional
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class BaseIntegrationTest {
+abstract class BaseIntegrationTest {
     companion object {
         @Container
         val postgres = PostgreSQLContainer("postgres:16")

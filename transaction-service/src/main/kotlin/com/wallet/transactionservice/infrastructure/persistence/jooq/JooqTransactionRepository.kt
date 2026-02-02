@@ -33,6 +33,13 @@ class JooqTransactionRepository(
             .execute()
     }
 
+    override fun updateStatus(transaction: Transaction) {
+        dsl.update(TRANSACTIONS)
+            .set(TRANSACTIONS.STATUS, transaction.status.name)
+            .where(TRANSACTIONS.ID.eq(transaction.transactionId.value))
+            .execute()
+    }
+
     override fun findById(id: TransactionId): Transaction? {
         return dsl.selectFrom(TRANSACTIONS)
             .where(TRANSACTIONS.ID.eq(id.value))

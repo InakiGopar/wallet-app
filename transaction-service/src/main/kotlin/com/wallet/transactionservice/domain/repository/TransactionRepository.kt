@@ -7,5 +7,7 @@ interface TransactionRepository {
 
     fun save(transaction: Transaction)
 
+    fun updateStatus(transaction: Transaction)
+
     fun findById(id: TransactionId): Transaction?
 }

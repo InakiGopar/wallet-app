@@ -23,9 +23,9 @@ import java.util.UUID
 
 @Service
 class TransactionService(
-        private val eventSerializer: EventSerializer,
-        private val transactionRepository : TransactionRepository,
-        private val outboxService: OutboxService
+    private val eventSerializer: EventSerializer<TransactionCreatedEvent>,
+    private val transactionRepository : TransactionRepository,
+    private val outboxService: OutboxService
 ) {
 
     @Transactional
@@ -84,7 +84,7 @@ class TransactionService(
 
         val updated = transaction.copy(status = TransactionStatus.COMPLETED)
 
-        transactionRepository.save(updated)
+        transactionRepository.updateStatus(updated)
 
     }
 }

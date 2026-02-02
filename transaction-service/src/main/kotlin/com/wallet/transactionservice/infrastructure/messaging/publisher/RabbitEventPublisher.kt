@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 class RabbitEventPublisher(
     private val rabbit: RabbitTemplate
 ) : EventPublisher {
-    override fun publish(routingKey: String, payload: String) {
+    override fun publish(routingKey: String, payload: Any) {
         try {
             rabbit.convertAndSend(
                 RabbitConfig.WALLET_EXCHANGE,

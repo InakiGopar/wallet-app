@@ -8,6 +8,7 @@ import com.wallet.transactionservice.domain.models.microTypes.Money
 import com.wallet.transactionservice.domain.models.microTypes.TransactionStatus
 import com.wallet.transactionservice.domain.models.microTypes.TransactionType
 import com.wallet.transactionservice.domain.repository.TransactionRepository
+import com.wallet.transactionservice.infrastructure.containers.BaseIntegrationTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
