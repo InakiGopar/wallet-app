@@ -23,9 +23,9 @@ import java.util.UUID
 
 @Service
 class AccountService(
+    private val eventSerializer: EventSerializer<BalanceUpdatedEvent>,
     private val accountRepository: AccountRepository,
     private val outboxService: OutboxService,
-    private val eventSerializer: EventSerializer
 ) {
     @Transactional
     fun createAccount(currency: Currency): Account {
