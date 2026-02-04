@@ -7,7 +7,6 @@ import com.wallet.transactionservice.domain.events.OutboxStatus
 import com.wallet.transactionservice.domain.repository.OutboxRepository
 import com.wallet.transactionservice.infrastructure.containers.BaseIntegrationTest
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
