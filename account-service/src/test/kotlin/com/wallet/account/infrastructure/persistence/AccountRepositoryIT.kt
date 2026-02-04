@@ -7,30 +7,15 @@ import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.domian.repository.AccountRepository
+import com.wallet.account.infrastructure.containers.BaseIntegrationTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
-import org.springframework.boot.test.context.SpringBootTest
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
-@SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
-class AccountRepositoryIT {
-
-    companion object {
-        @Container
-        val postgres = PostgreSQLContainer("postgres:16")
-            .withDatabaseName("account_db")
-            .withUsername("test")
-            .withPassword("test")
-    }
+class AccountRepositoryIT : BaseIntegrationTest() {
 
     @Autowired
     lateinit var accountRepository: AccountRepository

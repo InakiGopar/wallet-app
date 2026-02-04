@@ -10,34 +10,18 @@ import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.domian.repository.OutboxRepository
+import com.wallet.account.infrastructure.containers.BaseIntegrationTest
 import org.hibernate.validator.internal.util.Contracts.assertNotNull
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.transaction.annotation.Transactional
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 import java.math.BigDecimal
 import java.util.UUID
 
-@SpringBootTest
-@Testcontainers
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Transactional
-class AccountServiceIT {
 
-    companion object {
-        @Container
-        val postgres = PostgreSQLContainer("postgres:16")
-            .withDatabaseName("account_db")
-            .withUsername("test")
-            .withPassword("test")
-    }
+class AccountServiceIT : BaseIntegrationTest()  {
 
     @Autowired
     lateinit var accountService: AccountService
@@ -66,6 +50,8 @@ class AccountServiceIT {
 
     @Test
     fun `should update balance and register outbox event`() {
+        val debug = outboxRepository.findPending(2)
+        println(debug)
         // given
         val transactionId = TransactionId(UUID.randomUUID())
         val account = accountService.createAccount(Currency.ARS)

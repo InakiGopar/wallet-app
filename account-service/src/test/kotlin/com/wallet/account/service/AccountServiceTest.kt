@@ -13,6 +13,7 @@ import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.repository.AccountRepository
+import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import com.wallet.account.utils.serializer.EventSerializer
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
@@ -35,7 +36,7 @@ class AccountServiceTest {
     @MockK
     lateinit var outboxService: OutboxService
     @MockK
-    lateinit var eventSerializer: EventSerializer
+    lateinit var eventSerializer: EventSerializer<BalanceUpdatedEvent>
 
     @InjectMockKs
     lateinit var accountService: AccountService

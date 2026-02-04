@@ -1,6 +1,5 @@
 package com.wallet.transactionservice.infrastructure.messaging.listener
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.wallet.transactionservice.domain.models.AccountId
 import com.wallet.transactionservice.domain.models.Transaction
 import com.wallet.transactionservice.domain.models.TransactionId

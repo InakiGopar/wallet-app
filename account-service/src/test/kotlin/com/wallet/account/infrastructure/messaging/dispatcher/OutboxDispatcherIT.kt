@@ -6,6 +6,7 @@ import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.events.OutboxEvent
 import com.wallet.account.domian.events.OutboxStatus
 import com.wallet.account.domian.repository.OutboxRepository
+import com.wallet.account.infrastructure.containers.BaseIntegrationTest
 import com.wallet.account.infrastructure.messaging.exception.EventPublishException
 import com.wallet.account.infrastructure.messaging.publisher.EventPublisher
 import io.mockk.every
@@ -13,27 +14,10 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
-import org.springframework.boot.test.context.SpringBootTest
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
 import java.time.Instant
 import java.util.UUID
 
-@Testcontainers
-@SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class OutboxDispatcherIT {
-
-    companion object {
-        @Container
-        val postgres = PostgreSQLContainer("postgres:16")
-            .withDatabaseName("account_db")
-            .withUsername("test")
-            .withPassword("test")
-    }
-
+class OutboxDispatcherIT : BaseIntegrationTest() {
 
     @MockkBean
     lateinit var eventPublisher: EventPublisher

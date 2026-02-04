@@ -1,38 +1,20 @@
 package com.wallet.account.infrastructure.messaging.publisher
 
+import com.wallet.account.domian.events.EventType
+import com.wallet.account.domian.models.microTypes.Currency
+import com.wallet.account.dtos.event.TransactionCreatedEvent
+import com.wallet.account.infrastructure.containers.RabbitIntegrationTest
 import com.wallet.account.infrastructure.messaging.config.RabbitConfig
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
-import org.testcontainers.containers.RabbitMQContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
+import java.math.BigDecimal
+import java.time.Instant
+import java.util.UUID
 
-@Testcontainers
-@SpringBootTest(
-    properties = [
-        "spring.rabbitmq.listener.simple.auto-startup=false"
-    ]
-)
-class RabbitEventPublisherIT  {
 
-    companion object {
-
-        @Container
-        val rabbitMQ = RabbitMQContainer("rabbitmq:3.12-management")
-            .withReuse(false)
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun rabbitProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.rabbitmq.host") { rabbitMQ.host }
-            registry.add("spring.rabbitmq.port") { rabbitMQ.amqpPort }
-        }
-    }
+class RabbitEventPublisherIT : RabbitIntegrationTest() {
 
     @Autowired
     lateinit var rabbitTemplate: RabbitTemplate
@@ -43,12 +25,24 @@ class RabbitEventPublisherIT  {
     @Test
     fun `should publish event to transaction created queue`() {
         // given
-        val payload = """{ "type": "TRANSACTION_CREATED" }"""
+        val transactionId = UUID.randomUUID()
+        val accountId = UUID.randomUUID()
+        val amount = BigDecimal("50.00")
+
+        val event = TransactionCreatedEvent(
+            transactionId = transactionId,
+            accountId = accountId,
+            amount = amount,
+            currency = Currency.USD,
+            type = EventType.BALANCE_UPDATED.name,
+            createdAt = Instant.now(),
+            occurredAt = Instant.now(),
+        )
 
         // when
         publisher.publish(
             routingKey = RabbitConfig.TRANSACTION_CREATED_ROUTING_KEY,
-            payload = payload
+            payload = event
         )
 
         // then
@@ -57,6 +51,6 @@ class RabbitEventPublisherIT  {
             2000
         )
 
-        assertEquals(payload, received)
+        assertEquals(event, received)
     }
 }
