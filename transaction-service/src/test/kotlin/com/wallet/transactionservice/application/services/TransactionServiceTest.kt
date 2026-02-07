@@ -55,7 +55,7 @@ class TransactionServiceTest {
         val request = CreateTransactionRequest(
             accountId = UUID.randomUUID(),
             amount = BigDecimal("100.00"),
-            currency = Currency.ARS,
+            currency = Currency.ARS.name,
             type = "CREDIT"
         )
 
@@ -87,7 +87,7 @@ class TransactionServiceTest {
         val request = CreateTransactionRequest(
             accountId = UUID.randomUUID(),
             amount = BigDecimal("100.00"),
-            currency = Currency.USD,
+            currency = Currency.USD.name,
             type = "CREDIT"
         )
 

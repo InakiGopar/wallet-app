@@ -25,7 +25,7 @@ class TransactionServiceIT : BaseIntegrationTest() {
         val request = CreateTransactionRequest(
             accountId = UUID.randomUUID(),
             amount = BigDecimal("50.00"),
-            currency = Currency.USD,
+            currency = Currency.USD.name,
             type = TransactionType.CREDIT.name
         )
 

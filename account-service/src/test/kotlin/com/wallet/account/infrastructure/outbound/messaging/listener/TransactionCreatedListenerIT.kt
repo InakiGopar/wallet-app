@@ -51,7 +51,7 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
             transactionId = transactionId,
             accountId = accountId,
             amount = amount,
-            currency = Currency.USD,
+            currency = Currency.USD.name,
             type = EventType.BALANCE_UPDATED.name,
             createdAt = Instant.now(),
             occurredAt = Instant.now(),
