@@ -8,6 +8,7 @@ import com.wallet.transactionservice.domain.exceptions.TransactionNotFoundExcept
 import com.wallet.transactionservice.domain.models.AccountId
 import com.wallet.transactionservice.domain.models.Transaction
 import com.wallet.transactionservice.domain.models.TransactionId
+import com.wallet.transactionservice.domain.models.microTypes.Currency
 import com.wallet.transactionservice.domain.models.microTypes.Money
 import com.wallet.transactionservice.domain.models.microTypes.TransactionStatus
 import com.wallet.transactionservice.domain.models.microTypes.TransactionType
@@ -41,7 +42,7 @@ class TransactionService(
         val transaction = Transaction(
             transactionId = transactionId,
             accountId = AccountId(request.accountId),
-            money = Money(request.amount, request.currency),
+            money = Money(request.amount, Currency.valueOf(request.currency)),
             type = TransactionType.valueOf(request.type),
             status = TransactionStatus.PENDING,
             createdAt = Instant.now()

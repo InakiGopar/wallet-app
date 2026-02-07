@@ -26,3 +26,6 @@ spring:
   logging:
     level:
       org.springframework.amqp: DEBUG
+
+server:
+  port: 8081

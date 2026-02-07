@@ -10,6 +10,7 @@ class RabbitEventPublisher(
     private val rabbit: RabbitTemplate
 ) : EventPublisher {
     override fun publish(routingKey: String, payload: Any) {
+        println("Publishing $routingKey $payload")
         try {
             rabbit.convertAndSend(
                 RabbitConfig.WALLET_EXCHANGE,
