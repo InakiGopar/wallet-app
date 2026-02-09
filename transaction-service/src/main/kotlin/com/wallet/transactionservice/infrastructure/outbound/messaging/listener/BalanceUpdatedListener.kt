@@ -13,6 +13,7 @@ class BalanceUpdatedListener(
         queues = ["transaction.balance.updated"]
     )
     fun handle(event: BalanceUpdatedEvent) {
+        println("I listen: $event")
         transactionService.markAsCompleted(event)
     }
 }

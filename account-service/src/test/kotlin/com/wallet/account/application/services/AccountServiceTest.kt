@@ -12,6 +12,7 @@ import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.domian.models.microTypes.TransactionId
+import com.wallet.account.domian.models.microTypes.TransactionType
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import com.wallet.account.utils.serializer.EventSerializer
@@ -73,6 +74,7 @@ class AccountServiceTest {
     @Test
     fun `updateBalance throws InvalidAccountStateException if account is not ACTIVE`() {
         val transactionId = TransactionId(UUID.randomUUID())
+        val transactionType = TransactionType.CREDIT
         val acc = account(
             balance = BigDecimal("100"),
             status = AccountStatus.SUSPENDED
@@ -81,15 +83,16 @@ class AccountServiceTest {
         every { accountRepository.findById(acc.accountId) } returns acc
 
         assertThrows<InvalidAccountStateException> {
-            accountService.updateBalance(
+            accountService.updateBalanceAmount(
                 transactionId,
                 acc.accountId,
-                BalanceDelta(BigDecimal("10"))
+                BalanceDelta(BigDecimal("10")),
+                transactionType
             )
         }
 
         verify(exactly = 0) {
-            accountRepository.updateBalance(any(), any())
+            accountRepository.updateBalanceAmount(any(), any())
             outboxService.registerEvent(any(), any(), any(), any())
         }
     }
@@ -115,6 +118,7 @@ class AccountServiceTest {
     @Test
     fun `updateBalance updates balance and publishes event when account is ACTIVE`() {
         val transactionId = TransactionId(UUID.randomUUID())
+        val transactionType = TransactionType.CREDIT
 
         val acc = account(
             balance = BigDecimal("100"),
@@ -123,17 +127,18 @@ class AccountServiceTest {
 
         every { accountRepository.findById(acc.accountId) } returns acc
         every { eventSerializer.serialize(any()) } returns "json-payload"
-        every { accountRepository.updateBalance(any(), any()) } returns Unit
+        every { accountRepository.updateBalanceAmount(any(), any()) } returns Unit
         every { outboxService.registerEvent(any(), any(), any(), any()) } returns Unit
 
-        accountService.updateBalance(
+        accountService.updateBalanceAmount(
             transactionId,
             acc.accountId,
-            BalanceDelta(BigDecimal("50"))
+            BalanceDelta(BigDecimal("50")),
+            transactionType
         )
 
         verify {
-            accountRepository.updateBalance(
+            accountRepository.updateBalanceAmount(
                 acc.accountId,
                 Money(BigDecimal("150"), acc.currency)
             )

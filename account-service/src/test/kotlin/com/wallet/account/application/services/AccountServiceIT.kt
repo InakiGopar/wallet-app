@@ -8,6 +8,7 @@ import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.TransactionId
+import com.wallet.account.domian.models.microTypes.TransactionType
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.domian.repository.OutboxRepository
 import com.wallet.account.infrastructure.containers.BaseIntegrationTest
@@ -56,9 +57,10 @@ class AccountServiceIT : BaseIntegrationTest()  {
         val transactionId = TransactionId(UUID.randomUUID())
         val account = accountService.createAccount(Currency.ARS)
         val delta = BalanceDelta(BigDecimal("100.00"))
+        val transactionType = TransactionType.CREDIT
 
         // when
-        accountService.updateBalance(transactionId, account.accountId, delta)
+        accountService.updateBalanceAmount(transactionId, account.accountId, delta, transactionType)
 
         // then - balance updated
         val updatedAccount = accountRepository.findById(account.accountId)!!
@@ -83,15 +85,17 @@ class AccountServiceIT : BaseIntegrationTest()  {
         // given
         val transactionId = TransactionId(UUID.randomUUID())
         val account = accountService.createAccount(Currency.ARS)
+        val transactionType = TransactionType.CREDIT
 
         accountService.updateStatus(account.accountId, AccountStatus.SUSPENDED)
 
         // when / then
         assertThrows<InvalidAccountStateException> {
-            accountService.updateBalance(
+            accountService.updateBalanceAmount(
                 transactionId,
                 account.accountId,
-                BalanceDelta(BigDecimal("50"))
+                BalanceDelta(BigDecimal("50")),
+                transactionType
             )
         }
 

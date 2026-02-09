@@ -64,7 +64,7 @@ class JooqAccountRepository(
             }
     }
 
-    override fun updateBalance(accountId: AccountId, newBalance: Money) {
+    override fun updateBalanceAmount(accountId: AccountId, newBalance: Money) {
         dsl.update(BALANCES)
             .set(BALANCES.AMOUNT, newBalance.amount)
             .set(BALANCES.UPDATED_AT, DSL.currentLocalDateTime())

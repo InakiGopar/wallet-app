@@ -73,7 +73,7 @@ class AccountRepositoryIT : BaseIntegrationTest() {
             currency = Currency.USD
         )
 
-        accountRepository.updateBalance(accountId, newMoney)
+        accountRepository.updateBalanceAmount(accountId, newMoney)
 
         val updated = accountRepository.findById(accountId)
 

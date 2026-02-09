@@ -1,7 +1,6 @@
 package com.wallet.account.infrastructure.outbound.messaging.listener
 
 import com.ninjasquad.springmockk.MockkBean
-import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.models.AccountId
 import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
@@ -11,6 +10,7 @@ import com.wallet.account.infrastructure.containers.RabbitIntegrationTest
 import com.wallet.account.infrastructure.outbound.messaging.config.RabbitConfig
 import com.wallet.account.infrastructure.outbound.messaging.publisher.EventPublisher
 import com.wallet.account.application.services.AccountService
+import com.wallet.account.domian.models.microTypes.TransactionType
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
@@ -52,7 +52,7 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
             accountId = accountId,
             amount = amount,
             currency = Currency.USD.name,
-            type = EventType.BALANCE_UPDATED.name,
+            type = TransactionType.CREDIT.name,
             createdAt = Instant.now(),
             occurredAt = Instant.now(),
         )
@@ -67,12 +67,15 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
         val transactionIdSlot = slot<TransactionId>()
         val accountIdSlot = slot<AccountId>()
         val deltaSlot = slot<BalanceDelta>()
+        val transactionTypeSlot = slot<TransactionType>()
 
         verify(timeout = 5_000) {
-            accountService.updateBalance(
+            accountService.updateBalanceAmount(
                 capture(transactionIdSlot),
                 capture(accountIdSlot),
-                capture(deltaSlot)
+                capture(deltaSlot),
+                transactionTypeSlot.captured
+
             )
         }
 

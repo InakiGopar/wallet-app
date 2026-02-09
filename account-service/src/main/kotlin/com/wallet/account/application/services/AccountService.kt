@@ -3,6 +3,7 @@ package com.wallet.account.application.services
 import com.wallet.account.domian.events.AggregateType
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.exceptions.AccountNotFoundException
+import com.wallet.account.domian.exceptions.InsufficientFundsException
 import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
 import com.wallet.account.domian.models.AccountId
@@ -12,6 +13,7 @@ import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
 import com.wallet.account.domian.models.microTypes.TransactionId
+import com.wallet.account.domian.models.microTypes.TransactionType
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import com.wallet.account.utils.serializer.EventSerializer
@@ -59,7 +61,12 @@ class AccountService(
 
 
     @Transactional
-    fun updateBalance(transactionId : TransactionId, accountId: AccountId, delta: BalanceDelta) {
+    fun updateBalanceAmount(
+        transactionId : TransactionId,
+        accountId: AccountId,
+        delta: BalanceDelta,
+        type: TransactionType
+    ) {
 
         val account = getAccount(accountId)
 
@@ -69,10 +76,20 @@ class AccountService(
         }
 
         val previousBalance = account.balance.money.amount
-        val newBalance = Money(previousBalance + delta.amount, account.currency)
+
+        val newAmount = when (type) {
+            TransactionType.CREDIT -> previousBalance + delta.amount
+            TransactionType.DEBIT  -> previousBalance - delta.amount
+        }
+
+        if (newAmount < BigDecimal.ZERO) {
+            throw InsufficientFundsException(accountId, delta.amount, previousBalance)
+        }
+
+        val newBalance = Money(newAmount, account.currency)
 
 
-        accountRepository.updateBalance(accountId, newBalance)
+        accountRepository.updateBalanceAmount(accountId, newBalance)
 
         //Convert to JSON
         //Payload is the domain event data
