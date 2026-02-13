@@ -88,4 +88,16 @@ class TransactionService(
         transactionRepository.updateStatus(updated)
 
     }
+
+    @Transactional
+    fun markAsFailed(transactionId: UUID) {
+        val transaction = transactionRepository.findById(TransactionId(transactionId))
+            ?: throw TransactionNotFoundException(TransactionId(transactionId))
+
+        val updated = transaction.copy(status = TransactionStatus.FAILED)
+
+        transactionRepository.updateStatus(updated)
+
+    }
+
 }

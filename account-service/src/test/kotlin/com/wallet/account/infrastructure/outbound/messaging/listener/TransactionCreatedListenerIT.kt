@@ -70,7 +70,7 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
         val transactionTypeSlot = slot<TransactionType>()
 
         verify(timeout = 5_000) {
-            accountService.updateBalanceAmount(
+            accountService.tryUpdateBalanceAmount(
                 capture(transactionIdSlot),
                 capture(accountIdSlot),
                 capture(deltaSlot),

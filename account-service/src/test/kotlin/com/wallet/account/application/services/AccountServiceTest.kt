@@ -83,7 +83,7 @@ class AccountServiceTest {
         every { accountRepository.findById(acc.accountId) } returns acc
 
         assertThrows<InvalidAccountStateException> {
-            accountService.updateBalanceAmount(
+            accountService.tryUpdateBalanceAmount(
                 transactionId,
                 acc.accountId,
                 BalanceDelta(BigDecimal("10")),
@@ -93,7 +93,7 @@ class AccountServiceTest {
 
         verify(exactly = 0) {
             accountRepository.updateBalanceAmount(any(), any())
-            outboxService.registerEvent(any(), any(), any(), any())
+            outboxService.registerBalanceUpdatedEvent(any(), any(), any(), any())
         }
     }
 
@@ -128,9 +128,9 @@ class AccountServiceTest {
         every { accountRepository.findById(acc.accountId) } returns acc
         every { eventSerializer.serialize(any()) } returns "json-payload"
         every { accountRepository.updateBalanceAmount(any(), any()) } returns Unit
-        every { outboxService.registerEvent(any(), any(), any(), any()) } returns Unit
+        every { outboxService.registerBalanceUpdatedEvent(any(), any(), any(), any()) } returns Unit
 
-        accountService.updateBalanceAmount(
+        accountService.tryUpdateBalanceAmount(
             transactionId,
             acc.accountId,
             BalanceDelta(BigDecimal("50")),
@@ -145,11 +145,18 @@ class AccountServiceTest {
         }
 
         verify {
-            outboxService.registerEvent(
+            outboxService.registerBalanceUpdatedEvent(
                 aggregateId = acc.accountId.value,
                 aggregateType = AggregateType.ACCOUNT,
                 eventType = EventType.BALANCE_UPDATED,
-                payload = "json-payload"
+                payload = BalanceUpdatedEvent(
+                    transactionId = UUID.randomUUID(),
+                    accountId = UUID.randomUUID(),
+                    previousBalance = BigDecimal.valueOf(200),
+                    delta = BigDecimal.valueOf(100),
+                    newBalance = BigDecimal.valueOf(300),
+                    occurredAt = Instant.now()
+                )
             )
         }
     }

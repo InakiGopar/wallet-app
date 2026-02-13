@@ -15,8 +15,12 @@ import org.springframework.context.annotation.Configuration
 class RabbitConfig {
     companion object {
         const val WALLET_EXCHANGE = "wallet.events"
+
         const val BALANCE_UPDATED_QUEUE = "transaction.balance.updated"
         const val BALANCE_UPDATED_ROUTING_KEY = "balance.updated"
+
+        const val TRANSACTION_REJECTED_QUEUE = "transaction-service.transaction.rejected"
+        const val TRANSACTION_REJECTED_ROUTING_KEY = "transaction.rejected"
     }
 
     /**
@@ -33,6 +37,10 @@ class RabbitConfig {
     fun transactionQueue(): Queue =
         Queue(BALANCE_UPDATED_QUEUE, true)
 
+    @Bean
+    fun transactionRejectedQueue(): Queue =
+        Queue(TRANSACTION_REJECTED_QUEUE, true)
+
     /**
      * Binding: transaction-service consume 'balance.updated'
      */
@@ -46,6 +54,15 @@ class RabbitConfig {
             .to(eventsExchange)
             .with(BALANCE_UPDATED_ROUTING_KEY)
 
+    @Bean
+    fun transactionRejectedBinding(
+        transactionRejectedQueue: Queue,
+        eventsExchange: TopicExchange
+    ): Binding =
+        BindingBuilder
+            .bind(transactionRejectedQueue)
+            .to(eventsExchange)
+            .with(TRANSACTION_REJECTED_ROUTING_KEY)
 
     @Bean
     fun jacksonMessageConverter(

@@ -5,6 +5,7 @@ import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.events.OutboxEvent
 import com.wallet.account.domian.events.OutboxStatus
 import com.wallet.account.domian.repository.OutboxRepository
+import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -36,14 +39,21 @@ class OutboxServiceTest {
         val aggregateId = UUID.randomUUID()
         val aggregateType = AggregateType.ACCOUNT
         val eventType = EventType.BALANCE_UPDATED
-        val payload = """{"accountId":"$aggregateId","newBalance":1000}"""
+        val payload = BalanceUpdatedEvent(
+            transactionId = UUID.randomUUID(),
+            accountId = UUID.randomUUID(),
+            previousBalance = BigDecimal.valueOf(200),
+            delta = BigDecimal.valueOf(100),
+            newBalance = BigDecimal.valueOf(300),
+            occurredAt = Instant.now()
+        )
 
         val slot = slot<OutboxEvent>()
 
         every { outboxRepository.save(any()) } just Runs
 
         // when
-        outboxService.registerEvent(
+        outboxService.registerBalanceUpdatedEvent(
             aggregateId = aggregateId,
             aggregateType = aggregateType,
             eventType = eventType,
@@ -61,7 +71,8 @@ class OutboxServiceTest {
         assertEquals(aggregateId, savedEvent.aggregateId)
         assertEquals(aggregateType, savedEvent.aggregateType)
         assertEquals(eventType, savedEvent.type)
-        assertEquals(payload, savedEvent.payload)
+        //TODO improve this assertEquals
+        assertEquals(payload.toString(), savedEvent.payload)
         assertEquals(OutboxStatus.PENDING, savedEvent.status)
         assertNotNull(savedEvent.occurredAt)
     }

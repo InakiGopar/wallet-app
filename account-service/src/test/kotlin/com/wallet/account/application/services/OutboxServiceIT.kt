@@ -4,11 +4,14 @@ import com.wallet.account.domian.events.AggregateType
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.events.OutboxStatus
 import com.wallet.account.domian.repository.OutboxRepository
+import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import com.wallet.account.infrastructure.containers.BaseIntegrationTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
 class OutboxServiceIT : BaseIntegrationTest() {
@@ -23,10 +26,18 @@ class OutboxServiceIT : BaseIntegrationTest() {
     fun `should register outbox event as pending`() {
         // given
         val aggregateId = UUID.randomUUID()
-        val payload = """{"accountId":"$aggregateId","newBalance":100}"""
+
+        val payload = BalanceUpdatedEvent(
+            transactionId = UUID.randomUUID(),
+            accountId = UUID.randomUUID(),
+            previousBalance = BigDecimal.valueOf(200),
+            delta = BigDecimal.valueOf(100),
+            newBalance = BigDecimal.valueOf(300),
+            occurredAt = Instant.now()
+        )
 
         // when
-        outboxService.registerEvent(
+        outboxService.registerBalanceUpdatedEvent(
             aggregateId = aggregateId,
             aggregateType = AggregateType.ACCOUNT,
             eventType = EventType.BALANCE_UPDATED,
@@ -44,7 +55,8 @@ class OutboxServiceIT : BaseIntegrationTest() {
         assertEquals(AggregateType.ACCOUNT, event.aggregateType)
         assertEquals(EventType.BALANCE_UPDATED, event.type)
         assertEquals(OutboxStatus.PENDING, event.status)
-        assertEquals(payload, event.payload)
+        //TODO improve this assertEquals
+        assertEquals(payload.toString(), event.payload)
         assertNotNull(event.eventId)
         assertNotNull(event.occurredAt)
     }

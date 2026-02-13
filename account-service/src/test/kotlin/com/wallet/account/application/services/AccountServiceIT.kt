@@ -60,7 +60,7 @@ class AccountServiceIT : BaseIntegrationTest()  {
         val transactionType = TransactionType.CREDIT
 
         // when
-        accountService.updateBalanceAmount(transactionId, account.accountId, delta, transactionType)
+        accountService.tryUpdateBalanceAmount(transactionId, account.accountId, delta, transactionType)
 
         // then - balance updated
         val updatedAccount = accountRepository.findById(account.accountId)!!
@@ -91,7 +91,7 @@ class AccountServiceIT : BaseIntegrationTest()  {
 
         // when / then
         assertThrows<InvalidAccountStateException> {
-            accountService.updateBalanceAmount(
+            accountService.tryUpdateBalanceAmount(
                 transactionId,
                 account.accountId,
                 BalanceDelta(BigDecimal("50")),

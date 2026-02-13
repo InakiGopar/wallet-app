@@ -1,10 +1,10 @@
 package com.wallet.account.application.services
 
 import com.wallet.account.domian.events.AggregateType
+import com.wallet.account.domian.events.BalanceUpdateResult
 import com.wallet.account.domian.events.EventType
+import com.wallet.account.domian.events.RejectionReason
 import com.wallet.account.domian.exceptions.AccountNotFoundException
-import com.wallet.account.domian.exceptions.InsufficientFundsException
-import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
 import com.wallet.account.domian.models.AccountId
 import com.wallet.account.domian.models.microTypes.AccountStatus
@@ -16,7 +16,6 @@ import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.models.microTypes.TransactionType
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.dtos.event.BalanceUpdatedEvent
-import com.wallet.account.utils.serializer.EventSerializer
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -25,7 +24,6 @@ import java.util.UUID
 
 @Service
 class AccountService(
-    private val eventSerializer: EventSerializer<BalanceUpdatedEvent>,
     private val accountRepository: AccountRepository,
     private val outboxService: OutboxService,
 ) {
@@ -61,18 +59,21 @@ class AccountService(
 
 
     @Transactional
-    fun updateBalanceAmount(
+    fun tryUpdateBalanceAmount(
         transactionId : TransactionId,
         accountId: AccountId,
         delta: BalanceDelta,
         type: TransactionType
-    ) {
+    ) : BalanceUpdateResult {
 
         val account = getAccount(accountId)
 
-        //check 1
+        // check 1
         if (account.status != AccountStatus.ACTIVE) {
-            throw InvalidAccountStateException(accountId, account.status)
+            outboxService.registerRejectedEvent(transactionId, RejectionReason.ACCOUNT_NOT_ACTIVE)
+            return BalanceUpdateResult.Rejected(
+                RejectionReason.ACCOUNT_NOT_ACTIVE
+            )
         }
 
         val previousBalance = account.balance.money.amount
@@ -82,19 +83,25 @@ class AccountService(
             TransactionType.DEBIT  -> previousBalance - delta.amount
         }
 
+        //check 2
         if (newAmount < BigDecimal.ZERO) {
-            throw InsufficientFundsException(accountId, delta.amount, previousBalance)
+            outboxService.registerRejectedEvent(transactionId, RejectionReason.INSUFFICIENT_FUNDS)
+            return BalanceUpdateResult.Rejected(
+                RejectionReason.INSUFFICIENT_FUNDS
+            )
         }
 
         val newBalance = Money(newAmount, account.currency)
 
-
         accountRepository.updateBalanceAmount(accountId, newBalance)
 
-        //Convert to JSON
-        //Payload is the domain event data
-        val payload = eventSerializer.serialize(
-            BalanceUpdatedEvent(
+
+        //Call the outbox service
+        outboxService.registerBalanceUpdatedEvent(
+            aggregateId = account.accountId.value,
+            aggregateType = AggregateType.ACCOUNT,
+            eventType = EventType.BALANCE_UPDATED,
+            payload = BalanceUpdatedEvent(
                 transactionId = transactionId.value,
                 accountId = account.accountId.value,
                 previousBalance = previousBalance,
@@ -103,13 +110,8 @@ class AccountService(
                 occurredAt = Instant.now()
             )
         )
-        //Call the outbox service
-        outboxService.registerEvent(
-            aggregateId = account.accountId.value,
-            aggregateType = AggregateType.ACCOUNT,
-            eventType = EventType.BALANCE_UPDATED,
-            payload = payload
-        )
+
+        return BalanceUpdateResult.Applied
     }
 
 

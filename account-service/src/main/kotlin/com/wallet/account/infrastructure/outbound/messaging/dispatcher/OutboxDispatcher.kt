@@ -1,10 +1,12 @@
 package com.wallet.account.infrastructure.outbound.messaging.dispatcher
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.repository.OutboxRepository
-import com.wallet.account.dtos.event.BalanceUpdatedEvent
 import com.wallet.account.infrastructure.outbound.messaging.exception.EventPublishException
 import com.wallet.account.infrastructure.outbound.messaging.publisher.EventPublisher
+import com.wallet.account.utils.resolvers.EventClassResolver
+import com.wallet.account.utils.resolvers.EventRoutingResolver
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -14,7 +16,10 @@ import org.springframework.transaction.annotation.Transactional
 class OutboxDispatcher(
     private val outboxRepository: OutboxRepository,
     private val eventPublisher: EventPublisher,
-    private val objectMapper: ObjectMapper
+    //serialization helpers
+    private val objectMapper: ObjectMapper,
+    private val eventClassResolver: EventClassResolver,
+    private val eventRoutingResolver: EventRoutingResolver
 ) {
 
 
@@ -24,29 +29,39 @@ class OutboxDispatcher(
         //Polling
         val events = outboxRepository.findPendingForUpdate(limit = 50)
 
-        events.forEach { event ->
+        events.forEach { outboxEvent ->
             try {
-                //Convert payload from String to BalanceUpdatedEvent
-                val balanceUpdatedEvent =
-                    objectMapper.readValue(
-                        event.payload,
-                        BalanceUpdatedEvent::class.java
-                    )
+
+                // 1️⃣ Convert String to EventType
+                val eventType = EventType.valueOf(outboxEvent.type.name)
+
+                // 2️⃣ Resolve class in a dynamic way
+                val eventClass = eventClassResolver.resolve(eventType)
+
+                // 3️⃣ deserialize payload
+                val event =
+                    objectMapper.readValue(outboxEvent.payload, eventClass)
+
+                // 4️⃣ Resolve routingKey in a dynamic way
+                val routingKey = eventRoutingResolver.resolve(eventType)
+
+
+
                 //publish the event
                 eventPublisher.publish(
-                    routingKey = "balance.updated",
-                    payload = balanceUpdatedEvent
+                    routingKey = routingKey,
+                    payload = event
                 )
 
                 //update the status PENDING to SENT
-                outboxRepository.markAsSent(event.eventId)
+                outboxRepository.markAsSent(outboxEvent.eventId)
 
             } catch (ex: EventPublishException) {
                 LoggerFactory.getLogger(OutboxDispatcher::class.java)
-                    .error("Error publishing outbox event ${event.eventId}", ex)
+                    .error("Error publishing outbox event ${outboxEvent.eventId}", ex)
 
                 //If an error occurs change the status PENDING to FAILED
-                outboxRepository.markAsFailed(event.eventId)
+                outboxRepository.markAsFailed(outboxEvent.eventId)
             }
         }
     }

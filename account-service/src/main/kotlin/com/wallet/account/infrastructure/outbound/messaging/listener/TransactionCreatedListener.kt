@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class TransactionCreatedListener(
-    private val accountService: AccountService
+    private val accountService: AccountService,
 ) {
     @RabbitListener(queues = ["account.transaction.created"])
     fun handle(event: TransactionCreatedEvent) {
@@ -23,7 +23,7 @@ class TransactionCreatedListener(
         val newAmount = BalanceDelta(event.amount)
         val type = TransactionType.valueOf(event.type)
 
-        accountService.updateBalanceAmount(
+        accountService.tryUpdateBalanceAmount(
             transactionId,
             accountId,
             newAmount,

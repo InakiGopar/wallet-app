@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 class BalanceUpdatedEventSerializer(
     private val objectMapper: ObjectMapper
 ) : EventSerializer<BalanceUpdatedEvent> {
-    override fun serialize(event: BalanceUpdatedEvent)
+    override fun serialize(event: Any)
     : String = objectMapper.writeValueAsString(event)
 
 }

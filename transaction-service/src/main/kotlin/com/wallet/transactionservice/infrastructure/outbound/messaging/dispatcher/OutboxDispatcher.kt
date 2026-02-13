@@ -27,6 +27,7 @@ class OutboxDispatcher(
                         event.payload,
                         TransactionCreatedEvent::class.java
                     )
+                //publish the event
                 eventPublisher.publish(
                     routingKey = "transaction.created",
                     payload = transactionCreatedEvent
