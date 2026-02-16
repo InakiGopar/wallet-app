@@ -1,12 +1,10 @@
 package com.wallet.account.infrastructure.outbound.messaging.dispatcher
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.repository.OutboxRepository
 import com.wallet.account.infrastructure.outbound.messaging.exception.EventPublishException
 import com.wallet.account.infrastructure.outbound.messaging.publisher.EventPublisher
 import com.wallet.account.utils.resolvers.EventClassResolver
-import com.wallet.account.utils.resolvers.EventRoutingResolver
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -19,7 +17,6 @@ class OutboxDispatcher(
     //serialization helpers
     private val objectMapper: ObjectMapper,
     private val eventClassResolver: EventClassResolver,
-    private val eventRoutingResolver: EventRoutingResolver
 ) {
 
 
@@ -32,24 +29,20 @@ class OutboxDispatcher(
         events.forEach { outboxEvent ->
             try {
 
-                // 1️⃣ Convert String to EventType
-                val eventType = EventType.valueOf(outboxEvent.type.name)
+                // Convert String to EventType
+                val eventType = outboxEvent.type
 
-                // 2️⃣ Resolve class in a dynamic way
+                // Resolve class in a dynamic way
                 val eventClass = eventClassResolver.resolve(eventType)
 
-                // 3️⃣ deserialize payload
+                // Deserialize payload
                 val event =
                     objectMapper.readValue(outboxEvent.payload, eventClass)
-
-                // 4️⃣ Resolve routingKey in a dynamic way
-                val routingKey = eventRoutingResolver.resolve(eventType)
-
 
 
                 //publish the event
                 eventPublisher.publish(
-                    routingKey = routingKey,
+                    routingKey = eventType.routingKey,
                     payload = event
                 )
 
