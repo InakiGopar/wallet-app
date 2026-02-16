@@ -31,10 +31,10 @@ class OutboxService(
     ) {
 
         //Convert to JSON
-        //Payload is the domain event data
+        //Payload is the event data
         val json = balanceUpdatedEventSerializer.serialize(payload)
 
-        val event = OutboxEvent(
+        val outboxEvent = OutboxEvent(
             eventId = UUID.randomUUID(),
             aggregateId = aggregateId,
             aggregateType = aggregateType,
@@ -44,7 +44,7 @@ class OutboxService(
             occurredAt = Instant.now()
         )
 
-        outboxRepository.save(event)
+        outboxRepository.save(outboxEvent)
     }
 
     @Transactional
@@ -60,7 +60,7 @@ class OutboxService(
             )
         )
 
-        val event = OutboxEvent(
+        val outboxEvent = OutboxEvent(
             eventId = UUID.randomUUID(),
             aggregateId = transactionId.value,
             aggregateType = AggregateType.TRANSACTION,
@@ -70,6 +70,6 @@ class OutboxService(
             occurredAt = Instant.now()
         )
 
-        outboxRepository.save(event)
+        outboxRepository.save(outboxEvent)
     }
 }

@@ -101,6 +101,7 @@ class AccountService(
             aggregateId = account.accountId.value,
             aggregateType = AggregateType.ACCOUNT,
             eventType = EventType.BALANCE_UPDATED,
+            //event
             payload = BalanceUpdatedEvent(
                 transactionId = transactionId.value,
                 accountId = account.accountId.value,

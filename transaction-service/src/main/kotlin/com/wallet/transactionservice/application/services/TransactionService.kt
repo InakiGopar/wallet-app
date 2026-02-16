@@ -16,7 +16,6 @@ import com.wallet.transactionservice.domain.repository.TransactionRepository
 import com.wallet.transactionservice.dtos.event.BalanceUpdatedEvent
 import com.wallet.transactionservice.dtos.event.TransactionCreatedEvent
 import com.wallet.transactionservice.dtos.web.request.CreateTransactionRequest
-import com.wallet.transactionservice.utils.serializer.EventSerializer
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -24,7 +23,6 @@ import java.util.UUID
 
 @Service
 class TransactionService(
-    private val eventSerializer: EventSerializer<TransactionCreatedEvent>,
     private val transactionRepository : TransactionRepository,
     private val outboxService: OutboxService
 ) {
@@ -50,22 +48,20 @@ class TransactionService(
 
         transactionRepository.save(transaction)
 
-        //Convert event to JSON
-        val payload = eventSerializer.serialize(TransactionCreatedEvent(
-            transactionId = transactionId.value,
-            accountId = transaction.accountId.value,
-            amount = transaction.money.amount,
-            currency = transaction.money.currency,
-            type = transaction.type.name,
-            createdAt = transaction.createdAt,
-            occurredAt = Instant.now()
-        ))
-
         outboxService.registerEvent(
             aggregateId = transaction.transactionId.value,
             aggregateType = AggregateType.TRANSACTION,
             eventType = EventType.TRANSACTION_CREATED,
-            payload = payload
+            //event
+            payload = TransactionCreatedEvent(
+                transactionId = transactionId.value,
+                accountId = transaction.accountId.value,
+                amount = transaction.money.amount,
+                currency = transaction.money.currency,
+                type = transaction.type.name,
+                createdAt = transaction.createdAt,
+                occurredAt = Instant.now()
+            )
         )
 
         return transaction

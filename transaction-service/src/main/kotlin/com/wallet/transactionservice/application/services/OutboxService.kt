@@ -5,6 +5,8 @@ import com.wallet.transactionservice.domain.events.EventType
 import com.wallet.transactionservice.domain.events.OutboxEvent
 import com.wallet.transactionservice.domain.events.OutboxStatus
 import com.wallet.transactionservice.domain.repository.OutboxRepository
+import com.wallet.transactionservice.dtos.event.TransactionCreatedEvent
+import com.wallet.transactionservice.utils.serializer.EventSerializer
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -12,6 +14,7 @@ import java.util.UUID
 
 @Service
 class OutboxService(
+    private val eventSerializer: EventSerializer<TransactionCreatedEvent>,
     private val outboxRepository : OutboxRepository
 ) {
 
@@ -20,18 +23,21 @@ class OutboxService(
         aggregateId: UUID,
         aggregateType: AggregateType,
         eventType: EventType,
-        payload: String //here goes the event data domain
+        payload: TransactionCreatedEvent //here goes the event data domain
     ) {
-        val event = OutboxEvent(
+
+        val json = eventSerializer.serialize(payload)
+
+        val outboxEvent = OutboxEvent(
             eventId = UUID.randomUUID(),
             aggregateId = aggregateId,
             aggregateType = aggregateType,
             type = eventType,
-            payload = payload,
+            payload = json,
             status = OutboxStatus.PENDING,
             occurredAt = Instant.now()
         )
 
-        outboxRepository.save(event)
+        outboxRepository.save(outboxEvent)
     }
 }
