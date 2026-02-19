@@ -1,5 +1,5 @@
 package com.wallet.transactionservice.domain.events
 
-enum class EventType {
-    TRANSACTION_CREATED, TRANSACTION_REJECTED
+enum class EventType(val routingKey: String) {
+    TRANSACTION_CREATED("transaction.created"),
 }

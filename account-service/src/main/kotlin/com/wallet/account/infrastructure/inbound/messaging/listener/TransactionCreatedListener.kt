@@ -1,10 +1,11 @@
-package com.wallet.account.infrastructure.outbound.messaging.listener
+package com.wallet.account.infrastructure.inbound.messaging.listener
 
 import com.wallet.account.domian.models.AccountId
 import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.dtos.event.TransactionCreatedEvent
 import com.wallet.account.application.services.AccountService
+import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.TransactionType
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Component
@@ -20,12 +21,14 @@ class TransactionCreatedListener(
         //mapping the primitive types to domian types
         val transactionId = TransactionId(event.transactionId)
         val accountId = AccountId(event.accountId)
+        val currency = Currency.valueOf(event.currency)
         val newAmount = BalanceDelta(event.amount)
         val type = TransactionType.valueOf(event.type)
 
         accountService.tryUpdateBalanceAmount(
             transactionId,
             accountId,
+            currency,
             newAmount,
             type
         )

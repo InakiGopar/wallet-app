@@ -62,6 +62,7 @@ class AccountService(
     fun tryUpdateBalanceAmount(
         transactionId : TransactionId,
         accountId: AccountId,
+        currency: Currency,
         delta: BalanceDelta,
         type: TransactionType
     ) : BalanceUpdateResult {
@@ -70,9 +71,18 @@ class AccountService(
 
         // check 1
         if (account.status != AccountStatus.ACTIVE) {
+            //register the rejected event
             outboxService.registerRejectedEvent(transactionId, RejectionReason.ACCOUNT_NOT_ACTIVE)
             return BalanceUpdateResult.Rejected(
                 RejectionReason.ACCOUNT_NOT_ACTIVE
+            )
+        }
+
+        // check 2
+        if (account.currency != currency) {
+            outboxService.registerRejectedEvent(transactionId, RejectionReason.CURRENCY_DOESNT_MATCH)
+            return BalanceUpdateResult.Rejected(
+                RejectionReason.CURRENCY_DOESNT_MATCH
             )
         }
 
@@ -83,8 +93,9 @@ class AccountService(
             TransactionType.DEBIT  -> previousBalance - delta.amount
         }
 
-        //check 2
+        //check 3
         if (newAmount < BigDecimal.ZERO) {
+            //register the rejected event
             outboxService.registerRejectedEvent(transactionId, RejectionReason.INSUFFICIENT_FUNDS)
             return BalanceUpdateResult.Rejected(
                 RejectionReason.INSUFFICIENT_FUNDS

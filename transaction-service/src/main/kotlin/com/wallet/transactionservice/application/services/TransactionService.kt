@@ -48,7 +48,7 @@ class TransactionService(
 
         transactionRepository.save(transaction)
 
-        outboxService.registerEvent(
+        outboxService.registerTransactionCreatedEvent(
             aggregateId = transaction.transactionId.value,
             aggregateType = AggregateType.TRANSACTION,
             eventType = EventType.TRANSACTION_CREATED,

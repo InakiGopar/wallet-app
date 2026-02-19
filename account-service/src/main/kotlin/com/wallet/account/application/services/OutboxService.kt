@@ -63,7 +63,7 @@ class OutboxService(
         val outboxEvent = OutboxEvent(
             eventId = UUID.randomUUID(),
             aggregateId = transactionId.value,
-            aggregateType = AggregateType.TRANSACTION,
+            aggregateType = AggregateType.ACCOUNT,
             type = EventType.TRANSACTION_REJECTED,
             payload = json,
             status = OutboxStatus.PENDING,

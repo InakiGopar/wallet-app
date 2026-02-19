@@ -15,29 +15,28 @@ class OutboxDispatcher(
     private val eventPublisher: EventPublisher,
     private val objectMapper: ObjectMapper
 ) {
-    @Transactional
     @Scheduled(fixedDelay = 1000)
+    @Transactional
     fun dispatch() {
         val events = outboxRepository.findPendingForUpdate(50)
 
-        events.forEach { event ->
+        events.forEach { outboxEvent ->
             try {
                 val transactionCreatedEvent =
                     objectMapper.readValue(
-                        event.payload,
+                        outboxEvent.payload,
                         TransactionCreatedEvent::class.java
                     )
                 //publish the event
                 eventPublisher.publish(
-                    routingKey = "transaction.created",
+                    routingKey = outboxEvent.type.routingKey,
                     payload = transactionCreatedEvent
                 )
-                outboxRepository.markAsSent(event.eventId)
+                outboxRepository.markAsSent(outboxEvent.eventId)
             }
             catch (e: EventPublishException) {
                 //If an error occurs change the status PENDING to FAILED
-                outboxRepository.markAsFailed(event.eventId)
-                throw EventPublishException("Error publishing event ${event.eventId}", e)
+                outboxRepository.markAsFailed(outboxEvent.eventId)
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.wallet.transactionservice.infrastructure.outbound.messaging.listener
+package com.wallet.transactionservice.infrastructure.inbound.messaging.listener
 
 import com.wallet.transactionservice.dtos.event.BalanceUpdatedEvent
 import com.wallet.transactionservice.application.services.TransactionService

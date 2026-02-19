@@ -19,7 +19,7 @@ class OutboxService(
 ) {
 
     @Transactional
-    fun registerEvent(
+    fun registerTransactionCreatedEvent(
         aggregateId: UUID,
         aggregateType: AggregateType,
         eventType: EventType,

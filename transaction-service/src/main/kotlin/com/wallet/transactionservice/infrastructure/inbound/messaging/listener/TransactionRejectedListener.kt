@@ -1,4 +1,4 @@
-package com.wallet.transactionservice.infrastructure.outbound.messaging.listener
+package com.wallet.transactionservice.infrastructure.inbound.messaging.listener
 
 import com.wallet.transactionservice.application.services.TransactionService
 import com.wallet.transactionservice.domain.events.TransactionRejectedEvent
@@ -12,6 +12,7 @@ class TransactionRejectedListener(
 
     @RabbitListener(queues = ["transaction-service.transaction.rejected"])
     fun handle(event: TransactionRejectedEvent) {
+        println("I listen: $event")
         transactionService.markAsFailed(event.transactionId)
     }
 

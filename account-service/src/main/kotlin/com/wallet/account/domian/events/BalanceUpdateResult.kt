@@ -6,5 +6,6 @@ sealed class BalanceUpdateResult {
 }
 enum class RejectionReason {
     INSUFFICIENT_FUNDS,
-    ACCOUNT_NOT_ACTIVE
+    ACCOUNT_NOT_ACTIVE,
+    CURRENCY_DOESNT_MATCH,
 }
