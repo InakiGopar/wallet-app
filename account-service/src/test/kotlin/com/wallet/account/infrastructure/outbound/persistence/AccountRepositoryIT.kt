@@ -81,4 +81,51 @@ class AccountRepositoryIT : BaseIntegrationTest() {
         Assertions.assertThat(updated!!.balance.money.amount.compareTo(BigDecimal("200")))
             .isEqualTo(0)
     }
+
+
+    @Test
+    fun `updateStatus changes account status`() {
+        val accountId = AccountId(UUID.randomUUID())
+        val now = Instant.now()
+
+        val account = Account(
+            accountId = accountId,
+            currency = Currency.USD,
+            status = AccountStatus.ACTIVE,
+            createdAt = now,
+            balance = Balance(
+                accountId = accountId,
+                money = Money(
+                    amount = BigDecimal.valueOf(100),
+                    currency = Currency.USD
+                ),
+                updatedAt = now
+            )
+        )
+
+        accountRepository.create(account)
+
+        // when
+        accountRepository.updateStatus(accountId, AccountStatus.SUSPENDED)
+
+        // then
+        val updated = accountRepository.findById(accountId)
+
+        Assertions.assertThat(updated).isNotNull
+        Assertions.assertThat(updated!!.status)
+            .isEqualTo(AccountStatus.SUSPENDED)
+
+        Assertions.assertThat(updated.balance.money.amount.compareTo(BigDecimal("100")))
+            .isEqualTo(0)
+    }
+
+
+    @Test
+    fun `findById returns null if account does not exist`() {
+        val accountId = AccountId(UUID.randomUUID())
+
+        val found = accountRepository.findById(accountId)
+
+        Assertions.assertThat(found).isNull()
+    }
 }

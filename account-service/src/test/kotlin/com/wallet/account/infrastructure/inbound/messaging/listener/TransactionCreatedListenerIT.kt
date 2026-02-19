@@ -1,4 +1,4 @@
-package com.wallet.account.infrastructure.outbound.messaging.listener
+package com.wallet.account.infrastructure.inbound.messaging.listener
 
 import com.ninjasquad.springmockk.MockkBean
 import com.wallet.account.domian.models.AccountId
@@ -13,6 +13,7 @@ import com.wallet.account.application.services.AccountService
 import com.wallet.account.domian.models.microTypes.TransactionType
 import io.mockk.slot
 import io.mockk.verify
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry
@@ -27,7 +28,7 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
     @Autowired
     lateinit var eventPublisher: EventPublisher
 
-    @MockkBean
+    @MockkBean(relaxed = true)
     lateinit var accountService: AccountService
 
     @Autowired
@@ -66,6 +67,7 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
         // then
         val transactionIdSlot = slot<TransactionId>()
         val accountIdSlot = slot<AccountId>()
+        val currencySlot = slot<Currency>()
         val deltaSlot = slot<BalanceDelta>()
         val transactionTypeSlot = slot<TransactionType>()
 
@@ -73,16 +75,18 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
             accountService.tryUpdateBalanceAmount(
                 capture(transactionIdSlot),
                 capture(accountIdSlot),
+                capture(currencySlot),
                 capture(deltaSlot),
-                transactionTypeSlot.captured
-
+                capture(transactionTypeSlot)
             )
         }
 
         // mapping assertions
-        assert(transactionIdSlot.captured.value == transactionId)
-        assert(accountIdSlot.captured.value == accountId)
-        assert(deltaSlot.captured.amount.compareTo(amount) == 0)
+        assertEquals(transactionId, transactionIdSlot.captured.value)
+        assertEquals(accountId, accountIdSlot.captured.value)
+        assertEquals(Currency.USD.name, currencySlot.captured.name)
+        assertEquals(0, deltaSlot.captured.amount.compareTo(amount))
+        assertEquals(TransactionType.CREDIT, transactionTypeSlot.captured)
     }
 
 }

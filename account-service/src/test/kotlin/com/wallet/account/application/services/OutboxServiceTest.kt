@@ -4,8 +4,12 @@ import com.wallet.account.domian.events.AggregateType
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.events.OutboxEvent
 import com.wallet.account.domian.events.OutboxStatus
+import com.wallet.account.domian.events.RejectionReason
+import com.wallet.account.domian.events.TransactionRejectedEvent
+import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.repository.OutboxRepository
 import com.wallet.account.dtos.event.BalanceUpdatedEvent
+import com.wallet.account.utils.serializer.EventSerializer
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -28,53 +32,92 @@ class OutboxServiceTest {
     @MockK
     lateinit var outboxRepository: OutboxRepository
 
+    @MockK
+    lateinit var balanceUpdatedEventSerializer: EventSerializer<BalanceUpdatedEvent>
+
+    @MockK
+    lateinit var transactionRejectedSerializer: EventSerializer<TransactionRejectedEvent>
+
     @InjectMockKs
     lateinit var outboxService: OutboxService
 
 
 
     @Test
-    fun `should register outbox event with pending status`() {
-        // given
+    fun `should serialize payload and save outbox event`() {
+
         val aggregateId = UUID.randomUUID()
-        val aggregateType = AggregateType.ACCOUNT
-        val eventType = EventType.BALANCE_UPDATED
         val payload = BalanceUpdatedEvent(
             transactionId = UUID.randomUUID(),
             accountId = UUID.randomUUID(),
-            previousBalance = BigDecimal.valueOf(200),
-            delta = BigDecimal.valueOf(100),
-            newBalance = BigDecimal.valueOf(300),
+            previousBalance = BigDecimal("200"),
+            delta = BigDecimal("100"),
+            newBalance = BigDecimal("300"),
             occurredAt = Instant.now()
         )
 
-        val slot = slot<OutboxEvent>()
+        val serializedJson = """{"mock":"json"}"""
 
+        every { balanceUpdatedEventSerializer.serialize(payload) } returns serializedJson
         every { outboxRepository.save(any()) } just Runs
 
-        // when
+        val slot = slot<OutboxEvent>()
+
         outboxService.registerBalanceUpdatedEvent(
             aggregateId = aggregateId,
-            aggregateType = aggregateType,
-            eventType = eventType,
+            aggregateType = AggregateType.ACCOUNT,
+            eventType = EventType.BALANCE_UPDATED,
             payload = payload
         )
 
-        // then
         verify(exactly = 1) {
+            balanceUpdatedEventSerializer.serialize(payload)
+        }
+
+        verify {
             outboxRepository.save(capture(slot))
         }
 
-        val savedEvent = slot.captured
+        val saved = slot.captured
 
-        assertNotNull(savedEvent.eventId)
-        assertEquals(aggregateId, savedEvent.aggregateId)
-        assertEquals(aggregateType, savedEvent.aggregateType)
-        assertEquals(eventType, savedEvent.type)
-        //TODO improve this assertEquals
-        assertEquals(payload.toString(), savedEvent.payload)
-        assertEquals(OutboxStatus.PENDING, savedEvent.status)
-        assertNotNull(savedEvent.occurredAt)
+        assertEquals(aggregateId, saved.aggregateId)
+        assertEquals(EventType.BALANCE_UPDATED, saved.type)
+        assertEquals(serializedJson, saved.payload)
+        assertEquals(OutboxStatus.PENDING, saved.status)
+        assertNotNull(saved.eventId)
+        assertNotNull(saved.occurredAt)
+    }
+
+    @Test
+    fun `should serialize and save rejected event`() {
+
+        val transactionId = TransactionId(UUID.randomUUID())
+        val reason = RejectionReason.INSUFFICIENT_FUNDS
+
+        val serializedJson = """{"reason":"INSUFFICIENT_FUNDS"}"""
+
+        every { transactionRejectedSerializer.serialize(any()) } returns serializedJson
+        every { outboxRepository.save(any()) } just Runs
+
+        val slot = slot<OutboxEvent>()
+
+        outboxService.registerRejectedEvent(transactionId, reason)
+
+        verify {
+            transactionRejectedSerializer.serialize(any())
+        }
+
+        verify {
+            outboxRepository.save(capture(slot))
+        }
+
+        val saved = slot.captured
+
+        assertEquals(EventType.TRANSACTION_REJECTED, saved.type)
+        assertEquals(AggregateType.ACCOUNT, saved.aggregateType)
+        assertEquals(transactionId.value, saved.aggregateId)
+        assertEquals(serializedJson, saved.payload)
+        assertEquals(OutboxStatus.PENDING, saved.status)
     }
 
 

@@ -30,7 +30,7 @@ class TransactionRepositoryIT : BaseIntegrationTest() {
             transactionId = transactionId,
             accountId = accountId,
             money = Money(
-                amount = BigDecimal("100.00"),
+                amount = BigDecimal("777.00"),
                 currency = Currency.USD,
             ),
             type = TransactionType.DEBIT,
@@ -46,7 +46,7 @@ class TransactionRepositoryIT : BaseIntegrationTest() {
         Assertions.assertNotNull(loaded)
         Assertions.assertEquals(
             0,
-            loaded!!.money.amount.compareTo(BigDecimal("100.00"))
+            loaded!!.money.amount.compareTo(BigDecimal("777.00"))
         )
 
     }

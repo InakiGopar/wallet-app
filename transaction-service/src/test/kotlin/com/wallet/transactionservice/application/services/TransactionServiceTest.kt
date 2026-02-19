@@ -14,9 +14,7 @@ import com.wallet.transactionservice.domain.models.microTypes.TransactionStatus
 import com.wallet.transactionservice.domain.models.microTypes.TransactionType
 import com.wallet.transactionservice.domain.repository.TransactionRepository
 import com.wallet.transactionservice.dtos.event.BalanceUpdatedEvent
-import com.wallet.transactionservice.dtos.event.TransactionCreatedEvent
 import com.wallet.transactionservice.dtos.web.request.CreateTransactionRequest
-import com.wallet.transactionservice.utils.serializer.EventSerializer
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -40,9 +38,6 @@ class TransactionServiceTest {
     lateinit var transactionRepository: TransactionRepository
 
     @MockK
-    lateinit var eventSerializer: EventSerializer<TransactionCreatedEvent>
-
-    @MockK
     lateinit var outboxService: OutboxService
 
     @InjectMockKs
@@ -56,13 +51,12 @@ class TransactionServiceTest {
             accountId = UUID.randomUUID(),
             amount = BigDecimal("100.00"),
             currency = Currency.ARS.name,
-            type = "CREDIT"
+            type = TransactionType.CREDIT.name,
         )
 
         every { transactionRepository.findById(any()) } returns null
         every { transactionRepository.save(any()) } just Runs
-        every { eventSerializer.serialize(any()) } returns """{"event":"json"}"""
-        every { outboxService.registerEvent(any(), any(), any(), any()) } just Runs
+        every { outboxService.registerTransactionCreatedEvent(any(), any(), any(), any()) } just Runs
 
         // when
         val result = transactionService.createTransaction(request)
@@ -71,11 +65,16 @@ class TransactionServiceTest {
         assertEquals(TransactionStatus.PENDING, result.status)
 
         verify(exactly = 1) {
-            outboxService.registerEvent(
+            outboxService.registerTransactionCreatedEvent(
                 any(),
                 AggregateType.TRANSACTION,
                 EventType.TRANSACTION_CREATED,
-                any()
+                match {
+                    it.accountId == request.accountId &&
+                            it.amount == request.amount &&
+                            it.currency == Currency.ARS &&
+                            it.type == TransactionType.CREDIT.name
+                }
             )
         }
     }
@@ -88,7 +87,7 @@ class TransactionServiceTest {
             accountId = UUID.randomUUID(),
             amount = BigDecimal("100.00"),
             currency = Currency.USD.name,
-            type = "CREDIT"
+            type = TransactionType.CREDIT.name
         )
 
         every { transactionRepository.findById(any()) } returns mockk()
@@ -100,7 +99,7 @@ class TransactionServiceTest {
 
         verify(exactly = 0) {
             transactionRepository.save(any())
-            outboxService.registerEvent(any(), any(), any(), any())
+            outboxService.registerTransactionCreatedEvent(any(), any(), any(), any())
         }
     }
 
@@ -200,6 +199,31 @@ class TransactionServiceTest {
 
         verify(exactly = 0) {
             transactionRepository.updateStatus(any())
+        }
+    }
+
+    @Test
+    fun `should mark transaction as failed`() {
+        val transactionId = TransactionId(UUID.randomUUID())
+
+        val transaction = Transaction(
+            transactionId = transactionId,
+            accountId = AccountId(UUID.randomUUID()),
+            money = Money(BigDecimal("100"), Currency.USD),
+            status = TransactionStatus.PENDING,
+            type = TransactionType.CREDIT,
+            createdAt = Instant.now()
+        )
+
+        every { transactionRepository.findById(transactionId) } returns transaction
+        every { transactionRepository.updateStatus(any()) } just Runs
+
+        transactionService.markAsFailed(transactionId.value)
+
+        verify {
+            transactionRepository.updateStatus(
+                match { it.status == TransactionStatus.FAILED }
+            )
         }
     }
 }

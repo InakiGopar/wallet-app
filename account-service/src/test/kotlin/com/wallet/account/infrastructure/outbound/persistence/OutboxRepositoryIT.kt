@@ -44,10 +44,27 @@ class OutboxRepositoryIT : BaseIntegrationTest() {
 
         val pendingEvents = outboxRepository.findPending(limit = 10)
 
-        //Expected 4 because in the db are four outboxEvent saved
-        //Yes is a strange issue, this may have happened because I ran this test without @Transaction
         Assertions.assertEquals(0, pendingEvents.size)
         Assertions.assertTrue(pendingEvents.all { it.status == OutboxStatus.PENDING })
+    }
+
+    @Test
+    fun `findPending returns only pending events respecting limit`() {
+
+        val pending1 = newOutboxEvent(OutboxStatus.PENDING)
+        val pending2 = newOutboxEvent(OutboxStatus.PENDING)
+        val sent = newOutboxEvent(OutboxStatus.SENT)
+        val failed = newOutboxEvent(OutboxStatus.FAILED)
+
+        outboxRepository.save(pending1)
+        outboxRepository.save(pending2)
+        outboxRepository.save(sent)
+        outboxRepository.save(failed)
+
+        val result = outboxRepository.findPending(limit = 10)
+
+        Assertions.assertEquals(2, result.size)
+        Assertions.assertTrue(result.all { it.status == OutboxStatus.PENDING })
     }
 
     @Test

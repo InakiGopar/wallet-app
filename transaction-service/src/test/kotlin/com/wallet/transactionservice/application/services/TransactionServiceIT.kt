@@ -24,7 +24,7 @@ class TransactionServiceIT : BaseIntegrationTest() {
     fun `should persist transaction in database`() {
         val request = CreateTransactionRequest(
             accountId = UUID.randomUUID(),
-            amount = BigDecimal("50.00"),
+            amount = BigDecimal("11.1100"),
             currency = Currency.USD.name,
             type = TransactionType.CREDIT.name
         )
@@ -34,5 +34,8 @@ class TransactionServiceIT : BaseIntegrationTest() {
         val stored = transactionRepository.findById(transaction.transactionId)
 
         assertEquals(TransactionStatus.PENDING, stored?.status)
+        assertEquals(request.accountId, stored?.accountId?.value)
+        assertEquals(request.amount, stored?.money?.amount)
+        assertEquals(TransactionType.CREDIT, stored?.type)
     }
 }

@@ -1,9 +1,9 @@
 package com.wallet.account.application.services
 
 import com.wallet.account.domian.events.AggregateType
+import com.wallet.account.domian.events.BalanceUpdateResult
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.events.OutboxStatus
-import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.microTypes.BalanceDelta
 import com.wallet.account.domian.models.microTypes.Currency
@@ -16,7 +16,6 @@ import org.hibernate.validator.internal.util.Contracts.assertNotNull
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
 import java.util.UUID
@@ -51,16 +50,15 @@ class AccountServiceIT : BaseIntegrationTest()  {
 
     @Test
     fun `should update balance and register outbox event`() {
-        val debug = outboxRepository.findPending(2)
-        println(debug)
         // given
         val transactionId = TransactionId(UUID.randomUUID())
         val account = accountService.createAccount(Currency.ARS)
+        val currency = Currency.ARS
         val delta = BalanceDelta(BigDecimal("100.00"))
         val transactionType = TransactionType.CREDIT
 
         // when
-        accountService.tryUpdateBalanceAmount(transactionId, account.accountId, delta, transactionType)
+        accountService.tryUpdateBalanceAmount(transactionId, account.accountId,currency, delta, transactionType)
 
         // then - balance updated
         val updatedAccount = accountRepository.findById(account.accountId)!!
@@ -81,26 +79,33 @@ class AccountServiceIT : BaseIntegrationTest()  {
     }
 
     @Test
-    fun `should fail updating balance if account is not active`() {
-        // given
+    fun `should reject updating balance if account is not active and create rejected event`() {
         val transactionId = TransactionId(UUID.randomUUID())
         val account = accountService.createAccount(Currency.ARS)
-        val transactionType = TransactionType.CREDIT
+        val currency = Currency.ARS
 
         accountService.updateStatus(account.accountId, AccountStatus.SUSPENDED)
 
-        // when / then
-        assertThrows<InvalidAccountStateException> {
-            accountService.tryUpdateBalanceAmount(
-                transactionId,
-                account.accountId,
-                BalanceDelta(BigDecimal("50")),
-                transactionType
-            )
-        }
+        val result = accountService.tryUpdateBalanceAmount(
+            transactionId,
+            account.accountId,
+            currency,
+            BalanceDelta(BigDecimal("50")),
+            TransactionType.CREDIT
+        )
 
-        // no event should be created
-        assertTrue(outboxRepository.findPending(2).isEmpty())
+        val updatedAccount = accountRepository.findById(account.accountId)!!
+        assertTrue(
+            updatedAccount.balance.money.amount.compareTo(BigDecimal.ZERO) == 0
+        )
+
+        assertTrue(result is BalanceUpdateResult.Rejected)
+
+        val events = outboxRepository.findPending(10)
+        assertEquals(1, events.size)
+
+        val event = events.first()
+        assertEquals(AggregateType.ACCOUNT, event.aggregateType)
     }
 
 

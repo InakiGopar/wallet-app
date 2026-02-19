@@ -1,6 +1,7 @@
 package com.wallet.account.infrastructure.outbound.messaging.dispatcher
 
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.wallet.account.domian.events.AggregateType
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.events.OutboxEvent
@@ -8,6 +9,7 @@ import com.wallet.account.domian.events.OutboxStatus
 import com.wallet.account.domian.repository.OutboxRepository
 import com.wallet.account.infrastructure.outbound.messaging.exception.EventPublishException
 import com.wallet.account.infrastructure.outbound.messaging.publisher.EventPublisher
+import com.wallet.account.utils.resolvers.EventClassResolver
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -24,6 +26,12 @@ class OutboxDispatcherTest {
     lateinit var outboxRepository: OutboxRepository
 
     @MockK
+    lateinit var objectMapper: ObjectMapper
+
+    @MockK
+    lateinit var eventClassResolver: EventClassResolver
+
+    @MockK
     lateinit var eventPublisher: EventPublisher
 
     @InjectMockKs
@@ -31,36 +39,47 @@ class OutboxDispatcherTest {
 
 
     @Test
-    fun `should publish event and mark it as SENT`() {
-        // Arrange
-        val event = OutboxEvent(
-            eventId = UUID.randomUUID(),
+    fun `should deserialize publish and mark as SENT`() {
+
+        val eventId = UUID.randomUUID()
+
+        val outboxEvent = OutboxEvent(
+            eventId = eventId,
             aggregateId = UUID.randomUUID(),
             aggregateType = AggregateType.ACCOUNT,
             type = EventType.BALANCE_UPDATED,
-            payload = """{"amount":100}""",
+            payload = """{"accountId":"123","newBalance":100}""",
             status = OutboxStatus.PENDING,
             occurredAt = Instant.now()
         )
 
+        val fakeEventObject = Any()
 
-        every { outboxRepository.findPendingForUpdate(50) } returns listOf(event)
+        every { outboxRepository.findPendingForUpdate(50) } returns listOf(outboxEvent)
+        every { eventClassResolver.resolve(EventType.BALANCE_UPDATED) } returns Any::class.java
+        every { objectMapper.readValue(outboxEvent.payload, Any::class.java) } returns fakeEventObject
         every { eventPublisher.publish(any(), any()) } just Runs
-        every { outboxRepository.markAsSent(event.eventId) } just Runs
+        every { outboxRepository.markAsSent(eventId) } just Runs
 
-        // Act
         dispatcher.dispatch()
 
-        // Assert
-        verify(exactly = 1) {
+        verify {
+            eventClassResolver.resolve(EventType.BALANCE_UPDATED)
+        }
+
+        verify {
+            objectMapper.readValue(outboxEvent.payload, Any::class.java)
+        }
+
+        verify {
             eventPublisher.publish(
-                routingKey = event.type.name,
-                payload = event.payload
+                EventType.BALANCE_UPDATED.routingKey,
+                fakeEventObject
             )
         }
 
-        verify(exactly = 1) {
-            outboxRepository.markAsSent(event.eventId)
+        verify {
+            outboxRepository.markAsSent(eventId)
         }
 
         verify(exactly = 0) {
@@ -70,32 +89,36 @@ class OutboxDispatcherTest {
 
 
     @Test
-    fun `should mark event as FAILED when publishing fails`() {
-        // Arrange
-        val event = OutboxEvent(
-            eventId = UUID.randomUUID(),
+    fun `should mark event as FAILED when publish throws EventPublishException`() {
+
+        val eventId = UUID.randomUUID()
+
+        val outboxEvent = OutboxEvent(
+            eventId = eventId,
             aggregateId = UUID.randomUUID(),
             aggregateType = AggregateType.ACCOUNT,
             type = EventType.BALANCE_UPDATED,
-            payload = """{"amount":100}""",
+            payload = """{}""",
             status = OutboxStatus.PENDING,
             occurredAt = Instant.now()
         )
 
-        every { outboxRepository.findPendingForUpdate(50) } returns listOf(event)
+        val fakeEventObject = Any()
+
+        every { outboxRepository.findPendingForUpdate(50) } returns listOf(outboxEvent)
+        every { eventClassResolver.resolve(any()) } returns Any::class.java
+        every { objectMapper.readValue(any<String>(), Any::class.java) } returns fakeEventObject
 
         every {
             eventPublisher.publish(any(), any())
         } throws EventPublishException("Rabbit down")
 
-        every { outboxRepository.markAsFailed(event.eventId) } just Runs
+        every { outboxRepository.markAsFailed(eventId) } just Runs
 
-        // Act
         dispatcher.dispatch()
 
-        // Assert
-        verify(exactly = 1) {
-            outboxRepository.markAsFailed(event.eventId)
+        verify {
+            outboxRepository.markAsFailed(eventId)
         }
 
         verify(exactly = 0) {

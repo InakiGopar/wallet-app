@@ -1,9 +1,9 @@
 package com.wallet.account.application.services
 
 import com.wallet.account.domian.events.AggregateType
+import com.wallet.account.domian.events.BalanceUpdateResult
 import com.wallet.account.domian.events.EventType
 import com.wallet.account.domian.exceptions.AccountNotFoundException
-import com.wallet.account.domian.exceptions.InvalidAccountStateException
 import com.wallet.account.domian.models.Account
 import com.wallet.account.domian.models.AccountId
 import com.wallet.account.domian.models.Balance
@@ -15,11 +15,11 @@ import com.wallet.account.domian.models.microTypes.TransactionId
 import com.wallet.account.domian.models.microTypes.TransactionType
 import com.wallet.account.domian.repository.AccountRepository
 import com.wallet.account.dtos.event.BalanceUpdatedEvent
-import com.wallet.account.utils.serializer.EventSerializer
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.junit5.MockKExtension
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -36,8 +36,6 @@ class AccountServiceTest {
     lateinit var accountRepository: AccountRepository
     @MockK
     lateinit var outboxService: OutboxService
-    @MockK
-    lateinit var eventSerializer: EventSerializer<BalanceUpdatedEvent>
 
     @InjectMockKs
     lateinit var accountService: AccountService
@@ -72,28 +70,35 @@ class AccountServiceTest {
 
 
     @Test
-    fun `updateBalance throws InvalidAccountStateException if account is not ACTIVE`() {
+    fun `updateBalance returns Rejected and registers rejected event if account is not ACTIVE`() {
         val transactionId = TransactionId(UUID.randomUUID())
-        val transactionType = TransactionType.CREDIT
         val acc = account(
             balance = BigDecimal("100"),
             status = AccountStatus.SUSPENDED
         )
 
         every { accountRepository.findById(acc.accountId) } returns acc
+        every { outboxService.registerRejectedEvent(any(), any()) } returns Unit
 
-        assertThrows<InvalidAccountStateException> {
-            accountService.tryUpdateBalanceAmount(
-                transactionId,
-                acc.accountId,
-                BalanceDelta(BigDecimal("10")),
-                transactionType
-            )
-        }
+        val result = accountService.tryUpdateBalanceAmount(
+            transactionId,
+            acc.accountId,
+            acc.currency,
+            BalanceDelta(BigDecimal("10")),
+            TransactionType.CREDIT
+        )
+
+        assert(result is BalanceUpdateResult.Rejected)
 
         verify(exactly = 0) {
             accountRepository.updateBalanceAmount(any(), any())
-            outboxService.registerBalanceUpdatedEvent(any(), any(), any(), any())
+        }
+
+        verify {
+            outboxService.registerRejectedEvent(
+                transactionId,
+                any()
+            )
         }
     }
 
@@ -116,26 +121,28 @@ class AccountServiceTest {
 
 
     @Test
-    fun `updateBalance updates balance and publishes event when account is ACTIVE`() {
+    fun `updateBalance updates balance and registers balance updated event`() {
         val transactionId = TransactionId(UUID.randomUUID())
-        val transactionType = TransactionType.CREDIT
-
         val acc = account(
             balance = BigDecimal("100"),
             status = AccountStatus.ACTIVE
         )
 
         every { accountRepository.findById(acc.accountId) } returns acc
-        every { eventSerializer.serialize(any()) } returns "json-payload"
         every { accountRepository.updateBalanceAmount(any(), any()) } returns Unit
         every { outboxService.registerBalanceUpdatedEvent(any(), any(), any(), any()) } returns Unit
 
-        accountService.tryUpdateBalanceAmount(
+        val delta = BalanceDelta(BigDecimal("50"))
+
+        val result = accountService.tryUpdateBalanceAmount(
             transactionId,
             acc.accountId,
-            BalanceDelta(BigDecimal("50")),
-            transactionType
+            acc.currency,
+            delta,
+            TransactionType.CREDIT
         )
+
+        assert(result is BalanceUpdateResult.Applied)
 
         verify {
             accountRepository.updateBalanceAmount(
@@ -144,21 +151,24 @@ class AccountServiceTest {
             )
         }
 
+        val payloadSlot = slot<BalanceUpdatedEvent>()
+
         verify {
             outboxService.registerBalanceUpdatedEvent(
                 aggregateId = acc.accountId.value,
                 aggregateType = AggregateType.ACCOUNT,
                 eventType = EventType.BALANCE_UPDATED,
-                payload = BalanceUpdatedEvent(
-                    transactionId = UUID.randomUUID(),
-                    accountId = UUID.randomUUID(),
-                    previousBalance = BigDecimal.valueOf(200),
-                    delta = BigDecimal.valueOf(100),
-                    newBalance = BigDecimal.valueOf(300),
-                    occurredAt = Instant.now()
-                )
+                payload = capture(payloadSlot)
             )
         }
+
+        val captured = payloadSlot.captured
+
+        assertEquals(transactionId.value, captured.transactionId)
+        assertEquals(acc.accountId.value, captured.accountId)
+        assertEquals(BigDecimal("100"), captured.previousBalance)
+        assertEquals(BigDecimal("50"), captured.delta)
+        assertEquals(BigDecimal("150"), captured.newBalance)
     }
 
 
