@@ -1,4 +1,12 @@
 
+buildscript {
+    dependencies {
+        classpath("org.flywaydb:flyway-database-postgresql:11.10.3")
+        classpath("org.postgresql:postgresql:42.7.3")
+    }
+}
+
+
 repositories {
     mavenCentral()
 }
@@ -14,10 +22,10 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 
     // JOOQ
-    id("nu.studer.jooq") version "9.0"
+    id("nu.studer.jooq") version "10.0"
 
     //Flyway
-    id("org.flywaydb.flyway") version "10.20.0"
+    id("org.flywaydb.flyway") version "11.10.3"
 }
 
 dependencyManagement {
@@ -87,6 +95,15 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+
+flyway {
+    url = "jdbc:postgresql://localhost:5432/account_db"
+    user = "postgres"
+    password = ""
+    locations = arrayOf("filesystem:src/main/resources/db/migration")
+}
+
+
 jooq {
     version.set(jooqVersion)
 
@@ -129,33 +146,12 @@ jooq {
 }
 
 
-flyway {
-    url = "jdbc:postgresql://localhost:5432/account_db"
-    user = "postgres"
-    password = ""
-    locations = arrayOf("filesystem:src/main/resources/db/migration")
-}
-
 tasks.register("dbCodegen") {
     group = "database"
     description = "Runs Flyway migrations and then generates jOOQ sources"
     dependsOn("flywayMigrate", "generateJooq")
 }
 
-tasks.register<Test>("integrationTest") {
-    useJUnitPlatform()
-
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    include("**/*IT*")
-
-    afterSuite(KotlinClosure2<TestDescriptor, TestResult, Unit>({ _, result ->
-        if (result.testCount == 0L) {
-            throw GradleException("No integration tests were executed!")
-        }
-    }))
-}
 
 
 

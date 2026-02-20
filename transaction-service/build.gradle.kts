@@ -1,4 +1,11 @@
 
+buildscript {
+    dependencies {
+        classpath("org.flywaydb:flyway-database-postgresql:11.10.3")
+        classpath("org.postgresql:postgresql:42.7.3")
+    }
+}
+
 plugins {
 
     //Kotlin
@@ -10,10 +17,10 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 
     // JOOQ
-    id("nu.studer.jooq") version "9.0"
+    id("nu.studer.jooq") version "10.0"
 
     //Flyway
-    id("org.flywaydb.flyway") version "10.20.0"
+    id("org.flywaydb.flyway") version "11.10.3"
 }
 
 group = "com.wallet"
@@ -99,6 +106,15 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+
+flyway {
+    url = "jdbc:postgresql://localhost:5432/transaction_db"
+    user = "postgres"
+    password = ""
+    locations = arrayOf("filesystem:src/main/resources/db/migration")
+}
+
+
 jooq {
     version.set(jooqVersion)
 
@@ -137,15 +153,6 @@ jooq {
             }
         }
     }
-}
-
-
-
-flyway {
-    url = "jdbc:postgresql://localhost:5432/transaction_db"
-    user = "postgres"
-    password = ""
-    locations = arrayOf("filesystem:src/main/resources/db/migration")
 }
 
 tasks.register("dbCodegen") {
