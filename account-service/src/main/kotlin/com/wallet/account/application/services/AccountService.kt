@@ -67,9 +67,15 @@ class AccountService(
         type: TransactionType
     ) : BalanceUpdateResult {
 
-        val account = getAccount(accountId)
+        val account = accountRepository.findById(accountId)
 
         // check 1
+        if (account == null) {
+            outboxService.registerRejectedEvent(transactionId, RejectionReason.ACCOUNT_NOT_FOUND)
+            return BalanceUpdateResult.Rejected(RejectionReason.ACCOUNT_NOT_FOUND)
+        }
+
+        // check 2
         if (account.status != AccountStatus.ACTIVE) {
             //register the rejected event
             outboxService.registerRejectedEvent(transactionId, RejectionReason.ACCOUNT_NOT_ACTIVE)
@@ -78,7 +84,7 @@ class AccountService(
             )
         }
 
-        // check 2
+        // check 3
         if (account.currency != currency) {
             outboxService.registerRejectedEvent(transactionId, RejectionReason.CURRENCY_DOESNT_MATCH)
             return BalanceUpdateResult.Rejected(
@@ -93,7 +99,7 @@ class AccountService(
             TransactionType.DEBIT  -> previousBalance - delta.amount
         }
 
-        //check 3
+        //check 4
         if (newAmount < BigDecimal.ZERO) {
             //register the rejected event
             outboxService.registerRejectedEvent(transactionId, RejectionReason.INSUFFICIENT_FUNDS)
