@@ -40,7 +40,6 @@ class OutboxServiceIT : BaseIntegrationTest() {
             amount = BigDecimal.valueOf(100),
             currency = Currency.ARS,
             type = TransactionType.CREDIT.name,
-            createdAt = Instant.now(),
             occurredAt = Instant.now()
         )
 

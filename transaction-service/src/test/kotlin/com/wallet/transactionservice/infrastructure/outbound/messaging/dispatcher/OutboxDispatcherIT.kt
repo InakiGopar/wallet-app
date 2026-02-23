@@ -122,7 +122,6 @@ class OutboxDispatcherIT : BaseIntegrationTest() {
             amount = BigDecimal("222.00"),
             currency = Currency.ARS,
             type = TransactionType.CREDIT.name,
-            createdAt = Instant.now(),
             occurredAt = Instant.now()
         )
 

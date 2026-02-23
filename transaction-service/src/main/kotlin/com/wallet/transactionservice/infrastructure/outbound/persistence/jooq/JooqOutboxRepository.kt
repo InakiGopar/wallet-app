@@ -6,10 +6,9 @@ import com.wallet.transactionservice.domain.events.EventType
 import com.wallet.transactionservice.domain.events.OutboxEvent
 import com.wallet.transactionservice.domain.events.OutboxStatus
 import com.wallet.transactionservice.domain.repository.OutboxRepository
-import com.wallet.transactionservice.infrastructure.outbound.persistence.jooq.utils.toInstantUtc
-import com.wallet.transactionservice.infrastructure.outbound.persistence.jooq.utils.toLocalDateTimeUtc
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.ZoneOffset
 import java.util.UUID
 
 @Repository
@@ -25,7 +24,7 @@ class JooqOutboxRepository(
             .set(OUTBOX_EVENT.TYPE, event.type.name)
             .set(OUTBOX_EVENT.PAYLOAD, event.payload)
             .set(OUTBOX_EVENT.STATUS, event.status.name)
-            .set(OUTBOX_EVENT.OCCURRED_AT, event.occurredAt.toLocalDateTimeUtc())
+            .set(OUTBOX_EVENT.OCCURRED_AT, event.occurredAt.atOffset(ZoneOffset.UTC))
             .execute()
     }
 
@@ -40,7 +39,7 @@ class JooqOutboxRepository(
                 type = EventType.valueOf(r.type!!),
                 payload = r.payload!!,
                 status = OutboxStatus.valueOf(r.status!!),
-                occurredAt = r.occurredAt!!.toInstantUtc(),
+                occurredAt = r.occurredAt!!.toInstant(),
             )
             }
     }
@@ -69,7 +68,7 @@ class JooqOutboxRepository(
                     type = EventType.valueOf(r.type!!),
                     payload = r.payload!!,
                     status = OutboxStatus.valueOf(r.status!!),
-                    occurredAt = r.occurredAt!!.toInstantUtc(),
+                    occurredAt = r.occurredAt!!.toInstant(),
                 )
             }
     }
@@ -101,7 +100,7 @@ class JooqOutboxRepository(
                     type = EventType.valueOf(r.type!!),
                     payload = r.payload!!,
                     status = OutboxStatus.valueOf(r.status!!),
-                    occurredAt = r.occurredAt!!.toInstantUtc(),
+                    occurredAt = r.occurredAt!!.toInstant(),
                 )
             }
     }

@@ -59,7 +59,6 @@ class TransactionService(
                 amount = transaction.money.amount,
                 currency = transaction.money.currency,
                 type = transaction.type.name,
-                createdAt = transaction.createdAt,
                 occurredAt = Instant.now()
             )
         )

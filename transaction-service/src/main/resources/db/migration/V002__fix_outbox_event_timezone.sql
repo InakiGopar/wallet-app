@@ -1,0 +1,3 @@
+ALTER TABLE outbox_event
+ALTER COLUMN occurred_at TYPE TIMESTAMP WITH TIME ZONE
+        USING occurred_at AT TIME ZONE 'UTC';

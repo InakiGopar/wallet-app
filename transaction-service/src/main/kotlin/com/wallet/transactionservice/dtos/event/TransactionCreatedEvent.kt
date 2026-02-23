@@ -11,6 +11,5 @@ data class TransactionCreatedEvent(
     val amount: BigDecimal,
     val currency: Currency,
     val type: String,
-    val createdAt: Instant,
     val occurredAt: Instant
 )

@@ -29,7 +29,6 @@ class TransactionCreatedEventSerializerTest {
             amount = BigDecimal("100.00"),
             currency = Currency.ARS,
             type = TransactionType.CREDIT.name,
-            createdAt = Instant.parse("2026-01-01T10:00:00Z"),
             occurredAt = Instant.parse("2026-01-01T10:00:01Z")
         )
 
@@ -40,7 +39,6 @@ class TransactionCreatedEventSerializerTest {
               "amount": 100.00,
               "currency": "ARS",
               "type": "CREDIT",
-              "createdAt": "2026-01-01T10:00:00Z",
               "occurredAt": "2026-01-01T10:00:01Z"
             }
         """.trimIndent()

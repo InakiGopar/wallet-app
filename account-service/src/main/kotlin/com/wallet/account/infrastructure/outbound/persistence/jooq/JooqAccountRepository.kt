@@ -6,15 +6,13 @@ import com.wallet.account.domian.models.microTypes.AccountStatus
 import com.wallet.account.domian.models.Balance
 import com.wallet.account.domian.models.microTypes.Currency
 import com.wallet.account.domian.models.microTypes.Money
-import com.wallet.account.infrastructure.outbound.persistence.jooq.utils.toInstantUtc
-import com.wallet.account.infrastructure.outbound.persistence.jooq.utils.toLocalDateTimeUtc
 import com.wallet.account.jooq.tables.references.ACCOUNTS
 import com.wallet.account.jooq.tables.references.BALANCES
 import com.wallet.account.domian.repository.AccountRepository
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 
 @Repository
@@ -27,13 +25,13 @@ class JooqAccountRepository(
             .set(ACCOUNTS.ACCOUNT_ID, account.accountId.value)
             .set(ACCOUNTS.CURRENCY, account.currency.name)
             .set(ACCOUNTS.STATUS, account.status.name)
-            .set(ACCOUNTS.CREATED_AT, account.createdAt.toLocalDateTimeUtc())
+            .set(ACCOUNTS.CREATED_AT, account.createdAt.atOffset(ZoneOffset.UTC))
             .execute()
 
         dsl.insertInto(BALANCES)
             .set(BALANCES.ACCOUNT_ID, account.accountId.value)
             .set(BALANCES.AMOUNT, account.balance.money.amount)
-            .set(BALANCES.UPDATED_AT, account.balance.updatedAt.toLocalDateTimeUtc())
+            .set(BALANCES.UPDATED_AT, account.balance.updatedAt.atOffset(ZoneOffset.UTC))
             .execute()
 
         return account
@@ -51,14 +49,14 @@ class JooqAccountRepository(
                     accountId = AccountId(r.get(ACCOUNTS.ACCOUNT_ID)!!),
                     currency = Currency.valueOf(r.get(ACCOUNTS.CURRENCY)!!),
                     status = AccountStatus.valueOf(r.get(ACCOUNTS.STATUS)!!),
-                    createdAt = r.get(ACCOUNTS.CREATED_AT)!!.toInstantUtc(),
+                    createdAt = r.get(ACCOUNTS.CREATED_AT)!!.toInstant(),
                     balance = Balance(
                         accountId = AccountId(r.get(BALANCES.ACCOUNT_ID)!!),
                         money = Money(
                             amount = r.get(BALANCES.AMOUNT)!!,
                             currency = Currency.valueOf(r.get(ACCOUNTS.CURRENCY)!!)
                         ),
-                        updatedAt = r.get(BALANCES.UPDATED_AT)!!.toInstantUtc()
+                        updatedAt = r.get(BALANCES.UPDATED_AT)!!.toInstant()
                     )
                 )
             }
@@ -67,7 +65,7 @@ class JooqAccountRepository(
     override fun updateBalanceAmount(accountId: AccountId, newBalance: Money) {
         dsl.update(BALANCES)
             .set(BALANCES.AMOUNT, newBalance.amount)
-            .set(BALANCES.UPDATED_AT, DSL.currentLocalDateTime())
+            .set(BALANCES.UPDATED_AT, OffsetDateTime.now(ZoneOffset.UTC))
             .where(BALANCES.ACCOUNT_ID.eq(accountId.value))
             .execute()
     }

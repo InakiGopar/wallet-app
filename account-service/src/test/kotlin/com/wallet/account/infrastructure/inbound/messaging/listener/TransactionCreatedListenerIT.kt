@@ -54,7 +54,6 @@ class TransactionCreatedListenerIT : RabbitIntegrationTest() {
             amount = amount,
             currency = Currency.USD.name,
             type = TransactionType.CREDIT.name,
-            createdAt = Instant.now(),
             occurredAt = Instant.now(),
         )
 

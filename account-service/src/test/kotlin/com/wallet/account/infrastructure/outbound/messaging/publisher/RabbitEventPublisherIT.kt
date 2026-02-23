@@ -47,7 +47,6 @@ class RabbitEventPublisherIT : RabbitIntegrationTest() {
             amount = amount,
             currency = Currency.USD.name,
             type = EventType.BALANCE_UPDATED.name,
-            createdAt = Instant.now(),
             occurredAt = Instant.now(),
         )
 

@@ -100,7 +100,7 @@ class TransactionRejectedListenerIT : RabbitIntegrationTest() {
 
         val event = TransactionRejectedEvent(
             transactionId = transactionId.value,
-            reason = "INSUFFICIENT_AMOUNT"
+            reason = "INSUFFICIENT_FUNDS"
         )
 
         // Act
