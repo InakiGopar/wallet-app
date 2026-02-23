@@ -5,11 +5,11 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d
 
   rabbitmq:
     image: rabbitmq:3-management
